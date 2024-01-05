@@ -2,3 +2,5 @@
 
 input: input.md
 escape_characters: "_%&"
+use_emph: []
+pkg_fancyvrb: True
