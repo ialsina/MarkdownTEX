@@ -89,15 +89,26 @@ class MarkdownParser:
     
     @staticmethod
     def enumerate(text):
-        pattern = r"\n(-\s*.*?\n)+\n"
-        replace = "\n\\begin{{itemize}}\n{}\n\\end{{itemize}}\n"
-        while True:
-            match_ = re.search(pattern, text, flags=MULTILINE)
-            if match_ is None:
-                break
-            start, end = match_.span()
-            content = "\n".join(["\\item " + item.strip("-").strip() for item in match_.group().strip().split("\n")])
-            text = text[:start] + replace.format(indent(content, " "*4)) + text[end:]
+        envs_patterns = [
+            ("itemize", r"\n(-\s*.*?\n)+\n", lambda x: x.lstrip("-")),
+            ("itemize", r"\n(\*\s*.*?\n)+\n", lambda x: x.lstrip("*")),
+            ("itemize", r"\n(\+\s*.*?\n)+\n", lambda x: x.lstrip("+")),
+            ("enumerate", r"\n(\d+\.\s*.*?\n)+\n", lambda x: x.split(".", 1)[1])
+        ]
+        for env, pattern, strip_fun in envs_patterns:
+            replace = "\n\\begin{{{env:}}}\n{content:}\n\\end{{{env:}}}\n\n"
+            while True:
+                match_ = re.search(pattern, text, flags=MULTILINE)
+                if match_ is None:
+                    break
+                start, end = match_.span()
+                content = "\n".join([
+                    "\\item " + strip_fun(item).strip()
+                    for item in match_.group().strip().split("\n")
+                ])
+                text = text[:start] + replace.format(env=env,
+                                                     content=indent(content, " "*4)
+                                                     ) + text[end:]
         return text
     
     @staticmethod
