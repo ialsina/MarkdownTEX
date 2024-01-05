@@ -1,8 +1,43 @@
+import sys
+import argparse
+import yaml
 import re
 from re import DOTALL, MULTILINE, IGNORECASE
 from textwrap import indent
 
-ESCAPE_CHARACTERS = "_%&"
+class App:
+
+    def __init__(self, args):
+        self.args = self._parse_arguments(args)
+        for arg, value in self.args.items():
+            setattr(self, arg, value)
+    
+    @classmethod
+    def _get_parser(cls):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("input", action="store", nargs="?")
+        parser.add_argument("-o", "--output", action="store", default=None)
+        parser.add_argument("-e", "--escape", action="store", dest="escape_characters")
+        parser.add_argument("-v", "--verbose", action="store_true")
+        parser.set_defaults(**cls._read_defaults())
+        return parser
+
+    @staticmethod
+    def _parse_arguments(args):
+        parser = App._get_parser()
+        namespace = parser.parse_args(args)
+        if not namespace.input.lower().endswith(".md"):
+            raise ValueError(
+                f'Input file "{namespace.input}" must end in ".md"'
+            )
+        if namespace.output is None:
+            namespace.output = namespace.input[:-3] + '.tex'
+        return vars(namespace)
+        
+    @staticmethod
+    def _read_defaults():
+        with open("defaults.yaml", "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
 
 def _m2l_sections(text):
     text = re.sub(r"^#{4}\s*(.+)\s*$", r"\\subsection{\1}", text, flags=MULTILINE)
@@ -60,7 +95,7 @@ def _escape(text):
         verbatims.append(verbatim.span())
 
     # Populate escape_positins (for all escape characteres)
-    for ch in ESCAPE_CHARACTERS:
+    for ch in app.escape_characters:
         for match_ in re.finditer(ch, text):
             pos = match_.start()
             if any(start <= pos and end > pos for start, end in verbatims):
@@ -88,6 +123,8 @@ def markdown_to_latex(text):
 
 
 if __name__ == "__main__":
+    app = App(sys.argv[1:])
+
     with open("input.md", "r") as f:
         text = f.read()
 

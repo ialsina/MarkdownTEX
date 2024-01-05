@@ -1,0 +1,4 @@
+---
+
+input: input.md
+escape_characters: "_%&"
