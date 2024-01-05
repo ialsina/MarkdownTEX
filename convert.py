@@ -39,94 +39,138 @@ class App:
         with open("defaults.yaml", "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
-def _m2l_sections(text):
-    text = re.sub(r"^#{4}\s*(.+)\s*$", r"\\subsection{\1}", text, flags=MULTILINE)
-    text = re.sub(r"^#{3}\s*(.+)\s*$", r"\\section{\1}", text, flags=MULTILINE)
-    text = re.sub(r"^#{2}\s*(.+)\s*$", r"\\chapter{\1}", text, flags=MULTILINE)
-    text = re.sub(r"^#{1}\s*(.+)\s*$", r"", text, flags=MULTILINE)
-    return text
+class MarkdownParser:
 
-def _m2l_code(text):
-    # Inline literal code
-    text = re.sub(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)", r"\\texttt{\1}", text)
+    def __init__(self, markdown):
+        self.markdown = markdown
+        self._latex = None
     
-    # Block literal code
-    pattern = r"^```\n(.*?)\n```$"
-    replace = "\\begin{{verbatim}}\n{}\n\\end{{verbatim}}\n"
-    while True:
-        match_ = re.search(pattern, text, flags=DOTALL+MULTILINE)
-        if match_ is None:
-            break
-        start, end = match_.span()
-        content = match_.groups()[0]
-        text = text[:start] + replace.format(indent(content, " "*4)) + text[end:]
-    return text
+    @property
+    def latex(self):
+        if self._latex is None:
+            self._latex = self.parse()
+        return self._latex
 
-def _m2l_href(text):
-    return re.sub(r"\[(.+?)\]\((.+?)\)", r"\\href{\2}{\1}", text)
-
-def _m2l_enumerate(text):
-    pattern = r"\n(-\s*.*?\n)+\n"
-    replace = "\n\\begin{{itemize}}\n{}\n\\end{{itemize}}\n"
-    while True:
-        match_ = re.search(pattern, text, flags=MULTILINE)
-        if match_ is None:
-            break
-        start, end = match_.span()
-        content = "\n".join(["\\item " + item.strip("-").strip() for item in match_.group().strip().split("\n")])
-        text = text[:start] + replace.format(indent(content, " "*4)) + text[end:]
-    return text
-
-def _m2l_emph(text):
-    text = re.sub(r"(?<!\*)\*{2}(\w[^\*\n]*?\w)\*{2}(?!\*)", r"\\emph{\1}", text)
-    text = re.sub(r"(?<!\*)\*{1}(\w[^\*\n]*?\w)\*{1}(?!\*)", r"\\emph{\1}", text)
-    return text
+    @staticmethod
+    def sections(text):
+        text = re.sub(r"^#{4}\s*(.+)\s*$", r"\\subsection{\1}", text, flags=MULTILINE)
+        text = re.sub(r"^#{3}\s*(.+)\s*$", r"\\section{\1}", text, flags=MULTILINE)
+        text = re.sub(r"^#{2}\s*(.+)\s*$", r"\\chapter{\1}", text, flags=MULTILINE)
+        text = re.sub(r"^#{1}\s*(.+)\s*$", r"", text, flags=MULTILINE)
+        return text
     
-def _escape(text):
-    # List of spans of verbatims in text
-    verbatims = []
-
-    # Positions in text to be escaped
-    escape_positions = set()
-
-    # Populate verbatims
-    # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
-    for verbatim in re.finditer(r"\\begin{verbatim}.+?\\end{verbatim}", text, flags=DOTALL+IGNORECASE):
-        verbatims.append(verbatim.span())
-
-    # Populate escape_positins (for all escape characteres)
-    for ch in app.escape_characters:
-        for match_ in re.finditer(ch, text):
-            pos = match_.start()
-            if any(start <= pos and end > pos for start, end in verbatims):
-                # In verbatim, do not escape
-                continue
-            escape_positions.add(pos)
-
-    # Add escape characters where necessary
-    # sorted and reversed so that already added escape characters don't mess
-    # with the numbering of the rest
-    text = list(text)
-    for pos in sorted(escape_positions, reverse=True):
-        text.insert(pos, "\\")
+    @staticmethod
+    def inline_code(text):
+        """Inline literal code"""
+        text = re.sub(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)", r"\\texttt{\1}", text)
+        return text
     
-    return "".join(text)
+    @staticmethod
+    def block_code(text):
+        """Block literal code"""
+        # Inline literal code
+        text = re.sub(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)", r"\\texttt{\1}", text)
+        
+        # Block literal code
+        pattern = r"^```\n(.*?)\n```$"
+        replace = "\\begin{{verbatim}}\n{}\n\\end{{verbatim}}\n"
+        while True:
+            match_ = re.search(pattern, text, flags=DOTALL+MULTILINE)
+            if match_ is None:
+                break
+            start, end = match_.span()
+            content = match_.groups()[0]
+            text = text[:start] + replace.format(indent(content, " "*4)) + text[end:]
+        return text
+    
+    @staticmethod
+    def href(text):
+        return re.sub(r"\[(.+?)\]\((.+?)\)", r"\\href{\2}{\1}", text)
+    
+    @staticmethod
+    def enumerate(text):
+        pattern = r"\n(-\s*.*?\n)+\n"
+        replace = "\n\\begin{{itemize}}\n{}\n\\end{{itemize}}\n"
+        while True:
+            match_ = re.search(pattern, text, flags=MULTILINE)
+            if match_ is None:
+                break
+            start, end = match_.span()
+            content = "\n".join(["\\item " + item.strip("-").strip() for item in match_.group().strip().split("\n")])
+            text = text[:start] + replace.format(indent(content, " "*4)) + text[end:]
+        return text
+    
+    @staticmethod
+    def emph(text):
+        text = re.sub(r"(?<!\*)\*{2}(\w[^\*\n]*?\w)\*{2}(?!\*)", r"\\{{textbf}}{{\1}}", text)
+        text = re.sub(r"(?<!_)_{2}(\w[^\_\n]*?\w)_{2}(?!_)", r"\\{{textbf}}{{\1}}", text)
+        text = re.sub(r"(?<!\*)\*{1}(\w[^\*\n]*?\w)\*{1}(?!\*)", r"\\{{textit}}{{\1}}", text)
+        text = re.sub(r"(?<!_)_{1}(\w[^\*\n]*?\w)_{1}(?!_)", r"\\{{textit}}{{\1}}", text)
+        return text
+    
+    @staticmethod
+    def escape(text):
+        """Escape characters"""
 
-def markdown_to_latex(text):
-    text = _m2l_sections(text)
-    text = _m2l_code(text)
-    text = _m2l_href(text)
-    text = _m2l_enumerate(text)
-    text = _m2l_emph(text)
-    text = _escape(text)
-    return text
+        # List of spans of verbatims in text
+        verbatims = []
+
+        # Positions in text to be escaped
+        escape_positions = set()
+
+        # Populate verbatims
+        # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
+        for verbatim in re.finditer(r"\\begin{verbatim}.+?\\end{verbatim}", text, flags=DOTALL+IGNORECASE):
+            verbatims.append(verbatim.span())
+
+        # Populate escape_positins (for all escape characteres)
+        for ch in app.escape_characters:
+            for match_ in re.finditer(ch, text):
+                pos = match_.start()
+                if any(start <= pos and end > pos for start, end in verbatims):
+                    # In verbatim, do not escape
+                    continue
+                escape_positions.add(pos)
+
+        # Add escape characters where necessary
+        # sorted and reversed so that already added escape characters don't mess
+        # with the numbering of the rest
+        text = list(text)
+        for pos in sorted(escape_positions, reverse=True):
+            text.insert(pos, "\\")
+        
+        return "".join(text)
+    
+    @staticmethod
+    def latex_symb(text):
+        """LaTeX command"""
+
+        return re.sub(r"(?<!\\)LaTeX", r"\\LaTeX", text)
+
+    def parse(self):
+        text = self.markdown
+        for fun in (
+            self.sections,
+            self.inline_code,
+            self.block_code,
+            self.href,
+            self.enumerate,
+            self.emph,
+            self.escape,
+            self.latex_symb,
+        ):
+            text = fun(text)
+        return text
 
 
 if __name__ == "__main__":
+
     app = App(sys.argv[1:])
 
-    with open("input.md", "r") as f:
-        text = f.read()
+    with open(app.input, "r") as f:
+        md_parser = MarkdownParser(f.read())
 
-    with open("output.txt", "w") as f:
-        f.write(markdown_to_latex(text))
+    md_parser.parse()
+
+    with open(app.output, "w") as f:
+        f.write(md_parser.latex)
