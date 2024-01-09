@@ -124,6 +124,14 @@ class MarkdownParser:
     
     def block_code(self, text):
         """Block literal code"""
+        def _convert_arg(arg):
+            if arg == "":
+                return arg
+            if cfg.pkg_fancyvrb:
+                return f"label={arg}"
+            else:
+                return ""
+
         cfg = self.cfg
         pattern = r"^```(.*?)\n(.*?)\n```$"
         texenv = LatexEnvironment(cfg.env_verbatim, args=cfg.arg_verbatim)
@@ -132,8 +140,8 @@ class MarkdownParser:
             if match_ is None:
                 break
             start, end = match_.span()
-            args, content = match_.groups()
-            texenv.args.append(args)
+            arg, content = match_.groups()
+            texenv.args.append(_convert_arg(arg))
             texenv.content = content
             text = text[:start] + str(texenv) + text[end:]
         return text

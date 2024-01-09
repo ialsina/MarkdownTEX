@@ -82,4 +82,11 @@ in triple backticks
     indented with at least 4 spaces
     or 1 tab.
 
+```Preliminary annotation
+A block of code enclosed in
+triple backticks can incorporate a
+prelimiary annotation, which can have 
+different usages.
+```
+
 Markdown [links](https://en.wikipedia.org/wiki/Hyperlink) are also supported and wrapped around a LaTeX [`href`](https://en.wikibooks.org/wiki/LaTeX/Hyperlinks) statement.
