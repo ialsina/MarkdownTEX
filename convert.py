@@ -29,6 +29,7 @@ class App:
         parser.add_argument("-v", "--verbose", action="store_true")
         parser.add_argument("--use-emph", action="store", nargs='*', choices=["single", "double"], dest="use_emph")
         parser.add_argument("--pkg-fancyvrb", action="store", choices=_ON_OFF)
+        parser.add_argument("--pkg-fancyvrb-args", action="store", nargs="*")
         parser.set_defaults(**cls._read_defaults())
         return parser
 
@@ -53,6 +54,7 @@ class App:
         namespace.cmd_single = ("emph" if "single" in namespace.use_emph else "textit")
         namespace.cmd_double = ("emph" if "double" in namespace.use_emph else "textbf")
         namespace.env_verbatim = ("Verbatim" if namespace.pkg_fancyvrb else "verbatim")
+        namespace.arg_verbatim = (namespace.pkg_fancyvrb_args if namespace.pkg_fancyvrb else [])
 
         return vars(namespace)
         
@@ -124,7 +126,7 @@ class MarkdownParser:
         """Block literal code"""
         cfg = self.cfg
         pattern = r"^```(.*?)\n(.*?)\n```$"
-        texenv = LatexEnvironment(cfg.env_verbatim)
+        texenv = LatexEnvironment(cfg.env_verbatim, args=cfg.arg_verbatim)
         while True:
             match_ = re.search(pattern, text, flags=DOTALL+MULTILINE)
             if match_ is None:
