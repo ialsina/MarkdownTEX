@@ -4,8 +4,9 @@ import sys
 import argparse
 import re
 from re import DOTALL, MULTILINE, IGNORECASE
-from textwrap import indent
+from textwrap import indent, dedent
 import yaml
+from typing import Optional
 
 class App:
 
@@ -60,6 +61,37 @@ class App:
         with open("defaults.yaml", "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
+class LatexEnvironment:
+    def __init__(self,
+                 name: str,
+                 args: Optional[list[str]] = None,
+                 content: Optional[str] = "",
+                 indent=True,
+                 curly=False,
+                 newline=True):
+        self.name = name
+        if args is None:
+            args = []
+        if isinstance(args, str):
+            args = [args]
+        self.args = args
+        self.content = content
+        self.indent = indent
+        self.curly = curly
+        self.newline = newline
+
+    def __str__(self):
+        sep = ",\n" if self.newline else ","
+        if self.indent:
+            sep += " " * (9 + len(self.name))
+        args_str = sep.join(list(filter(bool, self.args)))
+        if args_str:
+            args_str = f"[{args_str}]"
+        line_begin = f"\\begin{{{self.name}}}{args_str}"
+        line_end = f"\\end{{{self.name}}}"
+        content = self.content if not self.indent else indent(self.content, " "*4)
+        return f"{line_begin}\n{content}\n{line_end}\n"
+
 
 class MarkdownParser:
 
@@ -90,19 +122,18 @@ class MarkdownParser:
     
     def block_code(self, text):
         """Block literal code"""
-        env_verbatim = self.cfg.env_verbatim
-        pattern = r"^```\n(.*?)\n```$"
-        replace = "\\begin{{{env_verbatim:}}}{arguments:}\n{content:}\n\\end{{{env_verbatim}}}\n"
+        cfg = self.cfg
+        pattern = r"^```(.*?)\n(.*?)\n```$"
+        texenv = LatexEnvironment(cfg.env_verbatim)
         while True:
             match_ = re.search(pattern, text, flags=DOTALL+MULTILINE)
             if match_ is None:
                 break
             start, end = match_.span()
-            content = match_.groups()[0]
-            text = text[:start] + replace.format(env_verbatim=env_verbatim,
-                                                 arguments="",
-                                                 content=indent(content, " "*4),
-                                                 ) + text[end:]
+            args, content = match_.groups()
+            texenv.args.append(args)
+            texenv.content = content
+            text = text[:start] + str(texenv) + text[end:]
         return text
     
     @staticmethod
@@ -118,7 +149,6 @@ class MarkdownParser:
             ("enumerate", r"\n(\d+\.\s*.*?\n)+\n", lambda x: x.split(".", 1)[1])
         ]
         for env, pattern, strip_fun in envs_patterns:
-            replace = "\n\\begin{{{env:}}}\n{content:}\n\\end{{{env:}}}\n\n"
             while True:
                 match_ = re.search(pattern, text, flags=MULTILINE)
                 if match_ is None:
@@ -128,9 +158,8 @@ class MarkdownParser:
                     "\\item " + strip_fun(item).strip()
                     for item in match_.group().strip().split("\n")
                 ])
-                text = text[:start] + replace.format(env=env,
-                                                     content=indent(content, " "*4)
-                                                     ) + text[end:]
+                texenv = LatexEnvironment(name=env, content=content)
+                text = text[:start] + f"\n{str(texenv)}\n" + text[end:]
         return text
     
     def emph(self, text):
