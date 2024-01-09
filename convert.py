@@ -2,21 +2,24 @@
 
 import sys
 import argparse
-import yaml
 import re
 from re import DOTALL, MULTILINE, IGNORECASE
 from textwrap import indent
+import yaml
 
 class App:
 
-    def __init__(self, args):
+    def __init__(self, args=None):
+        if args is None:
+            args = []
         self.args = self._parse_arguments(args)
         for arg, value in self.args.items():
             setattr(self, arg, value)
     
     @classmethod
     def _get_parser(cls):
-        ON_OFF = ["ON", "OFF"]
+        # pylint: disable=C0103
+        _ON_OFF = ["ON", "OFF"]
 
         parser = argparse.ArgumentParser()
         parser.add_argument("input", action="store", nargs="?")
@@ -24,7 +27,7 @@ class App:
         parser.add_argument("-e", "--escape", action="store", dest="escape_characters")
         parser.add_argument("-v", "--verbose", action="store_true")
         parser.add_argument("--use-emph", action="store", nargs='*', choices=["single", "double"], dest="use_emph")
-        parser.add_argument("--pkg-fancyvrb", action="store", choices=ON_OFF)
+        parser.add_argument("--pkg-fancyvrb", action="store", choices=_ON_OFF)
         parser.set_defaults(**cls._read_defaults())
         return parser
 
@@ -60,8 +63,9 @@ class App:
 
 class MarkdownParser:
 
-    def __init__(self, markdown):
+    def __init__(self, markdown, cfg=None):
         self.markdown = markdown
+        self.cfg = cfg or App()
         self._latex = None
     
     @property
@@ -84,10 +88,9 @@ class MarkdownParser:
         text = re.sub(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)", r"\\texttt{\1}", text)
         return text
     
-    @staticmethod
-    def block_code(text):
+    def block_code(self, text):
         """Block literal code"""
-        env_verbatim = app.env_verbatim
+        env_verbatim = self.cfg.env_verbatim
         pattern = r"^```\n(.*?)\n```$"
         replace = "\\begin{{{env_verbatim:}}}{arguments:}\n{content:}\n\\end{{{env_verbatim}}}\n"
         while True:
@@ -130,24 +133,23 @@ class MarkdownParser:
                                                      ) + text[end:]
         return text
     
-    @staticmethod
-    def emph(text):
-        cmd_double = app.cmd_double
-        cmd_single = app.cmd_single
+    def emph(self, text):
+        cmd_double = self.cfg.cmd_double
+        cmd_single = self.cfg.cmd_single
         text = re.sub(r"(?<!\*)\*{2}(\w[^\*\n]*?\w)\*{2}(?!\*)", rf"\\{cmd_double}{{\1}}", text)
         text = re.sub(r"(?<!_)_{2}(\w[^\_\n]*?\w)_{2}(?!_)", rf"\\{cmd_double}{{\1}}", text)
         text = re.sub(r"(?<!\*)\*{1}(\w[^\*\n]*?\w)\*{1}(?!\*)", rf"\\{cmd_single}{{\1}}", text)
         text = re.sub(r"(?<!_)_{1}(\w[^\*\n]*?\w)_{1}(?!_)", rf"\\{cmd_single}{{\1}}", text)
         return text
     
-    @staticmethod
-    def escape(text):
+    def escape(self, text):
         """Escape characters"""
 
         # List of spans of verbatims in text
         verbatims = []
 
-        env_verbatim = app.env_verbatim
+        env_verbatim = self.cfg.env_verbatim
+        escape_characters = self.cfg.escape_characters
 
         # Positions in text to be escaped
         escape_positions = set()
@@ -158,7 +160,7 @@ class MarkdownParser:
             verbatims.append(verbatim.span())
 
         # Populate escape_positins (for all escape characteres)
-        for ch in app.escape_characters:
+        for ch in escape_characters:
             for match_ in re.finditer(ch, text):
                 pos = match_.start()
                 if any(start <= pos and end > pos for start, end in verbatims):
@@ -202,7 +204,7 @@ if __name__ == "__main__":
     app = App(sys.argv[1:])
 
     with open(app.input, "r") as f:
-        md_parser = MarkdownParser(f.read())
+        md_parser = MarkdownParser(f.read(), cfg=app)
 
     md_parser.parse()
 
