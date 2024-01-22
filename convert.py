@@ -25,6 +25,8 @@ class App:
         parser = argparse.ArgumentParser()
         parser.add_argument("input", action="store", nargs="?")
         parser.add_argument("-o", "--output", action="store", default=None)
+        parser.add_argument("-d", "--documentclass", action="store")
+        parser.add_argument("-t", "--header-one-is-title", action="store", choices=_ON_OFF)
         parser.add_argument("-e", "--escape", action="store", dest="escape_characters")
         parser.add_argument("-v", "--verbose", action="store_true")
         parser.add_argument("--use-emph", action="store", nargs='*', choices=["single", "double"], dest="use_emph")
@@ -36,7 +38,7 @@ class App:
     @staticmethod
     def _parse_arguments(args):
         parser = App._get_parser()
-        namespace = parser.parse_args(args)
+        namespace, unknown_args = parser.parse_known_args(args)
 
         if not namespace.input.lower().endswith(".md"):
             raise ValueError(
@@ -56,7 +58,63 @@ class App:
         namespace.env_verbatim = ("Verbatim" if namespace.pkg_fancyvrb else "verbatim")
         namespace.arg_verbatim = (namespace.pkg_fancyvrb_args if namespace.pkg_fancyvrb else [])
 
-        return vars(namespace)
+        # TODO Confuses, e.g. --headerthree with "input"...
+        headers_args, _ = App._parse_headers(namespace.documentclass,
+                                             namespace.header_one_is_title,
+                                             unknown_args,
+        )
+
+        args = vars(namespace)
+        args.update(vars(headers_args))
+
+        return args
+    
+    @staticmethod
+    def _parse_headers(document_class, header_one_is_title, args):
+        numbers = ("zero", "one", "two", "three", "four", "five", "six")
+        default_headers = (
+            "part",
+            "chapter",
+            "section",
+            "subsection",
+            "subsubsection",
+            "paragraph",
+            "subparagraph",
+            "subparagraph",
+        )
+        offset = 0
+        if header_one_is_title:
+            offset -= 1
+        if document_class == "book":
+            offset += -1
+        elif document_class == "report":
+            offset += 0
+        elif document_class == "article":
+            offset += 1
+        else:
+            raise ValueError(
+                f"Wrong value for document class: {document_class}."
+            )
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--headerone",
+                            action="store",
+                            nargs=1,
+                            default=("title"
+                                     if header_one_is_title
+                                     else default_headers[1 + offset]
+                            ),
+        )
+
+        for i in range(2, 7):
+            parser.add_argument(f"--header{numbers[i]}",
+                                action="store",
+                                nargs=1,
+                                default=default_headers[i + offset]
+            )
+        return parser.parse_known_args(args)
+
+
+    
         
     @staticmethod
     def _read_defaults():
@@ -108,12 +166,14 @@ class MarkdownParser:
             self._latex = self.parse()
         return self._latex
 
-    @staticmethod
-    def sections(text):
-        text = re.sub(r"^#{4}\s*(.+)\s*$", r"\\subsection{\1}", text, flags=MULTILINE)
-        text = re.sub(r"^#{3}\s*(.+)\s*$", r"\\section{\1}", text, flags=MULTILINE)
-        text = re.sub(r"^#{2}\s*(.+)\s*$", r"\\chapter{\1}", text, flags=MULTILINE)
-        text = re.sub(r"^#{1}\s*(.+)\s*$", r"", text, flags=MULTILINE)
+    def sections(self, text):
+        cfg = self.cfg
+        text = re.sub(r"^#{6}\s*(.+)\s*$", rf"\\{cfg.headersix}{{\1}}", text, flags=MULTILINE)
+        text = re.sub(r"^#{5}\s*(.+)\s*$", rf"\\{cfg.headerfive}{{\1}}", text, flags=MULTILINE)
+        text = re.sub(r"^#{4}\s*(.+)\s*$", rf"\\{cfg.headerfour}{{\1}}", text, flags=MULTILINE)
+        text = re.sub(r"^#{3}\s*(.+)\s*$", rf"\\{cfg.headerthree}{{\1}}", text, flags=MULTILINE)
+        text = re.sub(r"^#{2}\s*(.+)\s*$", rf"\\{cfg.headertwo}{{\1}}", text, flags=MULTILINE)
+        text = re.sub(r"^#{1}\s*(.+)\s*$", rf"\\{cfg.headerone}{{\1}}", text, flags=MULTILINE)
         return text
     
     @staticmethod

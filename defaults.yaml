@@ -1,6 +1,8 @@
 ---
 
 input: input.md
+documentclass: article
+header_one_is_title: True
 escape_characters: "_%&"
 use_emph: []
 pkg_fancyvrb: True
