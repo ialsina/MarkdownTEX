@@ -7,6 +7,10 @@ from re import DOTALL, MULTILINE, IGNORECASE
 from textwrap import indent, dedent
 import yaml
 from typing import Optional
+from functools import partial
+
+from commands import execute
+from environment import LatexEnvironment, LatexDocument
 
 class App:
 
@@ -16,7 +20,11 @@ class App:
         self.args = self._parse_arguments(args)
         for arg, value in self.args.items():
             setattr(self, arg, value)
+        self._postprocess()
     
+    def __iter__(self):
+        return iter({k: v for k, v in vars(self).items() if k != "args"}.items())
+
     @classmethod
     def _get_parser(cls):
         # pylint: disable=C0103
@@ -26,7 +34,10 @@ class App:
         parser.add_argument("input", action="store", nargs="?")
         parser.add_argument("-o", "--output", action="store", default=None)
         parser.add_argument("-d", "--documentclass", action="store")
-        parser.add_argument("-t", "--header-one-is-title", action="store", choices=_ON_OFF)
+        parser.add_argument("-T", "--title", action="store", default="")
+        parser.add_argument("-A", "--author", action="store", default="")
+        parser.add_argument("-D", "--date", action="store", default="")
+        parser.add_argument("-1", "--header-one-is-title", action="store", choices=_ON_OFF)
         parser.add_argument("-e", "--escape", action="store", dest="escape_characters")
         parser.add_argument("-v", "--verbose", action="store_true")
         parser.add_argument("--use-emph", action="store", nargs='*', choices=["single", "double"], dest="use_emph")
@@ -113,53 +124,45 @@ class App:
             )
         return parser.parse_known_args(args)
 
-
-    
-        
     @staticmethod
     def _read_defaults():
         with open("defaults.yaml", "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
-class LatexEnvironment:
-    def __init__(self,
-                 name: str,
-                 args: Optional[list[str]] = None,
-                 content: Optional[str] = "",
-                 indent=True,
-                 curly=False,
-                 newline=True):
-        self.name = name
-        if args is None:
-            args = []
-        if isinstance(args, str):
-            args = [args]
-        self.args = args
-        self.content = content
-        self.indent = indent
-        self.curly = curly
-        self.newline = newline
-
-    def __str__(self):
-        sep = ",\n" if self.newline else ","
-        if self.indent:
-            sep += " " * (9 + len(self.name))
-        args_str = sep.join(list(filter(bool, self.args)))
-        if args_str:
-            args_str = f"[{args_str}]"
-        line_begin = f"\\begin{{{self.name}}}{args_str}"
-        line_end = f"\\end{{{self.name}}}"
-        content = self.content if not self.indent else indent(self.content, " "*4)
-        return f"{line_begin}\n{content}\n{line_end}\n"
-
+    def _postprocess(self):
+        packages = set()
+        for k, v in vars(self).items():
+            match_ = re.match(r"^pkg_(.+)(?!_args)$", k)
+            if match_ is not None and v is True:
+                packages.add(match_.groups()[0])
+        self.packages = sorted(packages)
+    
+    def update(self, *args, **kwargs):
+        args = tuple(filter(lambda x: x is not None, args))
+        if all(isinstance(arg, dict) for arg in args):
+            for arg in args:
+                kwargs.update(arg)
+        else:
+            raise TypeError(
+                f"Wrong argument type: {[type(el) for el in args]}"
+            )
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 class MarkdownParser:
 
-    def __init__(self, markdown, cfg=None):
+    def __init__(self, markdown, cfg=None, **kwargs):
         self.markdown = markdown
-        self.cfg = cfg or App()
         self._latex = None
+        self.cfg = cfg or App()
+        for key, value in kwargs.items():
+            setattr(cfg, key, value)
     
+    @property
+    def code_environment_factory(self):
+        cfg = self.cfg
+        return partial(LatexEnvironment, name=cfg.env_verbatim, args=cfg.arg_verbatim)
+
     @property
     def latex(self):
         if self._latex is None:
@@ -173,7 +176,13 @@ class MarkdownParser:
         text = re.sub(r"^#{4}\s*(.+)\s*$", rf"\\{cfg.headerfour}{{\1}}", text, flags=MULTILINE)
         text = re.sub(r"^#{3}\s*(.+)\s*$", rf"\\{cfg.headerthree}{{\1}}", text, flags=MULTILINE)
         text = re.sub(r"^#{2}\s*(.+)\s*$", rf"\\{cfg.headertwo}{{\1}}", text, flags=MULTILINE)
-        text = re.sub(r"^#{1}\s*(.+)\s*$", rf"\\{cfg.headerone}{{\1}}", text, flags=MULTILINE)
+        if cfg.headerone != "title":
+            text = re.sub(r"^#{1}\s*(.+)\s*$", rf"\\{cfg.headerone}{{\1}}", text, flags=MULTILINE)
+        else:
+            title_match = re.search(r"^#{1}\s*(.+)\s*$", text, flags=MULTILINE)
+            if title_match is not None:
+                cfg.title = title_match.groups()[0] # pylint: disable=W0201
+            text = re.sub(r"^#{1}\s*(.+)\s*$", "", text, flags=MULTILINE)
         return text
     
     @staticmethod
@@ -181,7 +190,7 @@ class MarkdownParser:
         """Inline literal code"""
         text = re.sub(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)", r"\\texttt{\1}", text)
         return text
-    
+
     def block_code(self, text):
         """Block literal code"""
         def _convert_arg(arg):
@@ -193,18 +202,34 @@ class MarkdownParser:
                 return ""
 
         cfg = self.cfg
-        pattern = r"^```(.*?)\n(.*?)\n```$"
-        texenv = LatexEnvironment(cfg.env_verbatim, args=cfg.arg_verbatim)
+        pattern_enclosing = r"^```(.*?)\n(.*?)\n```$"
+        TexEnv = self.code_environment_factory # pylint: disable=C0103
+        
         while True:
-            match_ = re.search(pattern, text, flags=DOTALL+MULTILINE)
+            match_ = re.search(pattern_enclosing, text, flags=DOTALL+MULTILINE)
             if match_ is None:
                 break
-            start, end = match_.span()
             arg, content = match_.groups()
-            texenv.args.append(_convert_arg(arg))
-            texenv.content = content
+            start, end = match_.span()
+            texenv = TexEnv(content=content)
+            if arg:
+                texenv.args.append(_convert_arg(arg))
             text = text[:start] + str(texenv) + text[end:]
         return text
+
+    def environments(self, text):
+        pattern_enclosing = r"\[//\]:\s(?:<>|#)\s\(%texenv begin (.*)\)(.+?)\[//\]:\s(?:<>|#)\s\(%texenv end \1\)"
+        while True:
+            match_ = re.search(pattern_enclosing, text, flags=DOTALL+MULTILINE)
+            if match_ is None:
+                break
+            name, content = match_.groups()
+            start, end = match_.span()
+            texenv = LatexEnvironment(name=name, content=content)
+            text = text[:start] + str(texenv) + text[end:]
+        return text
+
+        
     
     @staticmethod
     def href(text):
@@ -240,12 +265,12 @@ class MarkdownParser:
         text = re.sub(r"(?<!\*)\*{1}(\w[^\*\n]*?\w)\*{1}(?!\*)", rf"\\{cmd_single}{{\1}}", text)
         text = re.sub(r"(?<!_)_{1}(\w[^\*\n]*?\w)_{1}(?!_)", rf"\\{cmd_single}{{\1}}", text)
         return text
-    
+
     def escape(self, text):
         """Escape characters"""
 
-        # List of spans of verbatims in text
-        verbatims = []
+        # List of spans of verbatims and comments in text
+        shield = []
 
         env_verbatim = self.cfg.env_verbatim
         escape_characters = self.cfg.escape_characters
@@ -255,14 +280,18 @@ class MarkdownParser:
 
         # Populate verbatims
         # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
-        for verbatim in re.finditer(rf"\\begin{env_verbatim}.+?\\end{env_verbatim}", text, flags=DOTALL+IGNORECASE):
-            verbatims.append(verbatim.span())
+        for verbatim in re.finditer(rf"\\begin{env_verbatim}.+?\\end{env_verbatim}", text, flags=DOTALL):
+            shield.append(verbatim.span())
+
+        for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
+            shield.append(comment.span())
+        
 
         # Populate escape_positins (for all escape characteres)
         for ch in escape_characters:
             for match_ in re.finditer(ch, text):
                 pos = match_.start()
-                if any(start <= pos and end > pos for start, end in verbatims):
+                if any(start <= pos and end > pos for start, end in shield):
                     # In verbatim, do not escape
                     continue
                 escape_positions.add(pos)
@@ -282,17 +311,43 @@ class MarkdownParser:
 
         return re.sub(r"(?<!\\)LaTeX", r"\\LaTeX", text)
 
+    @staticmethod
+    def _to_comment(text):
+        return f"% {text}"
+
+    def comments(self, text):
+        commands = set()
+        for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
+            content = comment.groups()[0]
+            position = comment.start()
+            if content[0] == "%":
+                command, arg = re.match(r"%(\w*)\s*(.*)", content).groups()
+                args = arg.split()
+                commands.add(command)
+                new_text, cfg = execute(command=command, args=args, text=text, position=position)
+                text = re.sub(comment.re, new_text, text)
+                self.cfg.update(cfg)
+            else:
+                text = re.sub(comment.re, MarkdownParser._to_comment(content), text)
+        return text
+    
+    def preamble(self, text):
+        return str(LatexDocument(text, self.cfg))
+
     def parse(self):
         text = self.markdown
         for fun in (
             self.sections,
             self.inline_code,
             self.block_code,
+            self.environments,
             self.href,
             self.enumerate,
             self.emph,
+            self.comments,
             self.escape,
             self.latex_symb,
+            self.preamble,
         ):
             text = fun(text)
         return text
@@ -304,8 +359,6 @@ if __name__ == "__main__":
 
     with open(app.input, "r") as f:
         md_parser = MarkdownParser(f.read(), cfg=app)
-
-    md_parser.parse()
 
     with open(app.output, "w") as f:
         f.write(md_parser.latex)

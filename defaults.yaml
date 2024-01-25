@@ -3,7 +3,8 @@
 input: input.md
 documentclass: article
 header_one_is_title: True
-escape_characters: "_%&"
+escape_characters: "_%&#"
 use_emph: []
+pkg_hyperref: True
 pkg_fancyvrb: True
 pkg_fancyvrb_args: "frame=single"
