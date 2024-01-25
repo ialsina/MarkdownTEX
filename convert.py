@@ -283,13 +283,12 @@ class MarkdownParser:
 
         # Populate verbatims
         # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
-        for verbatim in re.finditer(rf"\\begin{env_verbatim}.+?\\end{env_verbatim}", text, flags=DOTALL):
+        for verbatim in re.finditer(rf"\\begin{{{env_verbatim}}}.+?\\end{{{env_verbatim}}}", text, flags=DOTALL):
             shield.append(verbatim.span())
 
         for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
             shield.append(comment.span())
         
-
         # Populate escape_positins (for all escape characteres)
         for ch in escape_characters:
             for match_ in re.finditer(ch, text):
@@ -311,7 +310,6 @@ class MarkdownParser:
     @staticmethod
     def latex_symb(text):
         """LaTeX command"""
-
         return re.sub(r"(?<!\\)LaTeX", r"\\LaTeX", text)
 
     @staticmethod
@@ -347,8 +345,8 @@ class MarkdownParser:
             self.href,
             self.enumerate,
             self.emph,
-            self.comments,
             self.escape,
+            self.comments,
             self.latex_symb,
             self.preamble,
         ):
