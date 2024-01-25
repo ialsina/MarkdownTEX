@@ -232,6 +232,19 @@ class MarkdownParser:
             text = text[:start] + str(texenv) + text[end:]
         return text
 
+
+    def _get_shielded_positions(self, text):
+        shield = []
+
+        env_verbatim = self.cfg.env_verbatim
+
+        # Populate verbatims
+        # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
+        for verbatim in re.finditer(rf"\\begin{{{env_verbatim}}}.+?\\end{{{env_verbatim}}}", text, flags=DOTALL):
+            shield.append(verbatim.span())
+        for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
+            shield.append(comment.span())
+        return shield
         
     
     @staticmethod
@@ -273,21 +286,12 @@ class MarkdownParser:
         """Escape characters"""
 
         # List of spans of verbatims and comments in text
-        shield = []
+        shield = self._get_shielded_positions(text)
 
-        env_verbatim = self.cfg.env_verbatim
         escape_characters = self.cfg.escape_characters
 
         # Positions in text to be escaped
         escape_positions = set()
-
-        # Populate verbatims
-        # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
-        for verbatim in re.finditer(rf"\\begin{{{env_verbatim}}}.+?\\end{{{env_verbatim}}}", text, flags=DOTALL):
-            shield.append(verbatim.span())
-
-        for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
-            shield.append(comment.span())
         
         # Populate escape_positins (for all escape characteres)
         for ch in escape_characters:
