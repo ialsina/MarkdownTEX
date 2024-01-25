@@ -161,7 +161,10 @@ class MarkdownParser:
     @property
     def code_environment_factory(self):
         cfg = self.cfg
-        return partial(LatexEnvironment, name=cfg.env_verbatim, args=cfg.arg_verbatim)
+        return partial(
+            LatexEnvironment, name=cfg.env_verbatim,
+            args=cfg.arg_verbatim, indent_content=False
+        )
 
     @property
     def latex(self):

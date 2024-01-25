@@ -38,7 +38,10 @@ class LatexEnvironment:
                  content: Optional[str] = "",
                  indent=True,
                  curly=False,
-                 newline=True):
+                 newline=True,
+                 indent_content=None,
+                 indent_arguments=None,
+    ):
         self.name = name
         if args is None:
             args = []
@@ -46,21 +49,28 @@ class LatexEnvironment:
             args = [args]
         self.args = args
         self.content = content
-        self.indent = indent
+        self.indent = self._get_indent(indent, indent_arguments, indent_content)
         self.curly = curly
         self.newline = newline
         self.parse()
+    
+    @staticmethod
+    def _get_indent(default, *args):
+        return tuple((arg if arg is not None else default) for arg in args)
+
 
     def __str__(self):
         sep = ",\n" if self.newline else ","
-        if self.indent:
+        if self.indent[0]:
             sep += " " * (9 + len(self.name))
         args_str = sep.join(list(filter(bool, self.args)))
         if args_str:
             args_str = f"[{args_str}]"
         line_begin = f"\\begin{{{self.name}}}{args_str}"
         line_end = f"\\end{{{self.name}}}"
-        content = self.content if not self.indent else indent_(self.content, " "*4)
+        content = self.content
+        if self.indent[1]:
+            content = indent_(content, " "*4)
         return f"{line_begin}\n{content}\n{line_end}\n"
     
     def add_argument(self, argument):
