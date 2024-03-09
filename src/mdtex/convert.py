@@ -2,15 +2,14 @@
 
 import sys
 import argparse
+from pathlib import Path
 import re
-from re import DOTALL, MULTILINE, IGNORECASE
-from textwrap import indent, dedent
-import yaml
-from typing import Optional
+from re import DOTALL, MULTILINE
 from functools import partial
 
-from commands import execute
-from environment import LatexEnvironment, LatexDocument
+from mdtex.commands import execute
+from mdtex.config import config, defaults, PATH_IO
+from mdtex.environment import LatexEnvironment, LatexDocument
 
 class App:
 
@@ -43,7 +42,7 @@ class App:
         parser.add_argument("--use-emph", action="store", nargs='*', choices=["single", "double"], dest="use_emph")
         parser.add_argument("--pkg-fancyvrb", action="store", choices=_ON_OFF)
         parser.add_argument("--pkg-fancyvrb-args", action="store", nargs="*")
-        parser.set_defaults(**cls._read_defaults())
+        parser.set_defaults(**defaults)
         return parser
 
     @staticmethod
@@ -55,8 +54,6 @@ class App:
             raise ValueError(
                 f'Input file "{namespace.input}" must end in ".md"'
             )
-        if namespace.output is None:
-            namespace.output = namespace.input[:-3] + '.tex'
 
         for key, value in vars(namespace).items():
             if value == "ON":
@@ -125,11 +122,43 @@ class App:
         return parser.parse_known_args(args)
 
     @staticmethod
-    def _read_defaults():
-        with open("defaults.yaml", "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+    def _get_input_path(input_: str):
+        path_in = Path(input_)
+        if path_in.is_absolute():
+            if path_in.exists():
+                return path_in
+        else:
+            if (PATH_IO / path_in).exists:
+                return PATH_IO / path_in
+        raise FileNotFoundError(
+            f"File {input_} not found."
+        )
+
+    @staticmethod
+    def _get_output_path(output: str, input_path: Path):
+        path_in = input_path
+        dir_default = (
+            path_in.parent
+            if config.default_output_dir_as_input_dir
+            else Path(".").absolute()
+        )
+        path_out = (
+            Path(output)
+            if output is not None
+            else None
+        )
+        if path_out is None:
+            name_out = path_in.name
+            name_out = name_out.rstrip(path_in.suffix) + ".tex"
+            return dir_default / name_out
+        if not path_out.is_absolute():
+            return dir_default / path_out
+        return path_out
 
     def _postprocess(self):
+        self.input = self._get_input_path(self.input)
+        self.output = self._get_output_path(self.output, self.input)
+
         packages = set()
         for k, v in vars(self).items():
             match_ = re.match(r"^pkg_(.+)(?!_args)$", k)
@@ -148,6 +177,8 @@ class App:
             )
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+
 
 class MarkdownParser:
 
@@ -362,8 +393,8 @@ if __name__ == "__main__":
 
     app = App(sys.argv[1:])
 
-    with open(app.input, "r") as f:
+    with open(app.input, "r", encoding="utf-8") as f:
         md_parser = MarkdownParser(f.read(), cfg=app)
 
-    with open(app.output, "w") as f:
+    with open(app.output, "w", encoding="utf-8") as f:
         f.write(md_parser.latex)
