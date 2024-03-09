@@ -25,7 +25,7 @@ class App:
         _ON_OFF = ["ON", "OFF"]
 
         parser = argparse.ArgumentParser()
-        parser.add_argument("input", action="store", nargs="?")
+        parser.add_argument("input", action="store")
         parser.add_argument("-o", "--output", action="store", default=None)
         parser.add_argument("-d", "--documentclass", action="store")
         parser.add_argument("-T", "--title", action="store", default="")

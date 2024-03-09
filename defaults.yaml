@@ -1,6 +1,5 @@
 ---
 
-input: input.md
 documentclass: article
 header_one_is_title: True
 escape_characters: "_%&#"
