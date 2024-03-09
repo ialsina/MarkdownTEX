@@ -1,6 +1,6 @@
 # Markdown test document
 
-[//]: # This is a comment and is therefore ignored.
+[//]: # (This is a comment and is therefore ignored.)
 
 ## Heading level 2
 
