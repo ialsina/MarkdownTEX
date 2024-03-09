@@ -9,4 +9,9 @@ setup(
     packages=find_packages(),
     package_dir={"": "src",},
     install_requires=requirements,
+    entry_points={
+        "console_scripts": [
+            "md2tex=mdtex.tools.convert:md2tex",
+        ]
+    }
 )
