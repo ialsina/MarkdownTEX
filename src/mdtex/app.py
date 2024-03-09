@@ -33,6 +33,7 @@ class App:
         parser.add_argument("-D", "--date", action="store", default="")
         parser.add_argument("-1", "--header-one-is-title", action="store", choices=_ON_OFF)
         parser.add_argument("-e", "--escape", action="store", dest="escape_characters")
+        parser.add_argument("-L", "--latex-symb", action="store", choices=_ON_OFF)
         parser.add_argument("-v", "--verbose", action="store_true")
         parser.add_argument("--use-emph", action="store", nargs='*', choices=["single", "double"], dest="use_emph")
         parser.add_argument("--pkg-fancyvrb", action="store", choices=_ON_OFF)

@@ -103,8 +103,12 @@ class MarkdownParser:
         # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
         for verbatim in re.finditer(rf"\\begin{{{env_verbatim}}}.+?\\end{{{env_verbatim}}}", text, flags=DOTALL):
             shield.append(verbatim.span())
+        # Populate comments
         for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
             shield.append(comment.span())
+        # Populate hrefs (only first argument)
+        for href in re.finditer(r"\\href\{.+?\}", text, flags=MULTILINE):
+            shield.append(href.span())
         return shield
         
     
@@ -150,6 +154,8 @@ class MarkdownParser:
         shield = self._get_shielded_positions(text)
 
         escape_characters = self.cfg.escape_characters
+        if self.cfg.latex_symb:
+            escape_characters = list(escape_characters) + ["LaTeX"]
 
         # Positions in text to be escaped
         escape_positions = set()
@@ -158,7 +164,7 @@ class MarkdownParser:
         for ch in escape_characters:
             for match_ in re.finditer(ch, text):
                 pos = match_.start()
-                if any(start <= pos and end > pos for start, end in shield):
+                if any(start <= pos < end for start, end in shield):
                     # In verbatim, do not escape
                     continue
                 escape_positions.add(pos)
@@ -173,21 +179,16 @@ class MarkdownParser:
         return "".join(text)
     
     @staticmethod
-    def latex_symb(text):
-        """LaTeX command"""
-        return re.sub(r"(?<!\\)LaTeX", r"\\LaTeX", text)
-
-    @staticmethod
     def _to_comment(text):
         return f"% {text}"
 
     def comments(self, text):
         commands = set()
-        for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
+        for comment in re.finditer(r"\[//\]:\s+(?:<>|#)\s+\((.*)\)", text):
             content = comment.groups()[0]
             position = comment.start()
             if content[0] == "%":
-                command, arg = re.match(r"%(\w*)\s*(.*)", content).groups()
+                command, arg = re.match(r"% (\w*)\s*(.*)", content).groups()
                 args = arg.split()
                 commands.add(command)
                 new_text, cfg = execute(command=command, args=args, text=text, position=position)
@@ -212,7 +213,6 @@ class MarkdownParser:
             self.emph,
             self.escape,
             self.comments,
-            self.latex_symb,
             self.preamble,
         ):
             text = fun(text)
