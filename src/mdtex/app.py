@@ -123,7 +123,9 @@ class App:
             if path_in.exists():
                 return path_in
         else:
-            if (PATH_IO / path_in).exists:
+            if path_in.absolute().exists():
+                return path_in.absolute()
+            if (PATH_IO / path_in).exists():
                 return PATH_IO / path_in
         raise FileNotFoundError(
             f"File {input_} not found."
