@@ -141,6 +141,8 @@ class MarkdownParser:
     def emph(self, text):
         cmd_double = self.cfg.cmd_double
         cmd_single = self.cfg.cmd_single
+        text = re.sub(r"(?<!\*)\*{3}(\w[^\*\n]*?\w)\*{3}(?!\*)", rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
+        text = re.sub(r"(?<!_)_{3}(\w[^\_\n]*?\w)_{3}(?!_)",rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
         text = re.sub(r"(?<!\*)\*{2}(\w[^\*\n]*?\w)\*{2}(?!\*)", rf"\\{cmd_double}{{\1}}", text)
         text = re.sub(r"(?<!_)_{2}(\w[^\_\n]*?\w)_{2}(?!_)", rf"\\{cmd_double}{{\1}}", text)
         text = re.sub(r"(?<!\*)\*{1}(\w[^\*\n]*?\w)\*{1}(?!\*)", rf"\\{cmd_single}{{\1}}", text)
