@@ -1,0 +1,14 @@
+---
+
+# Allowed packages that can be turned on or off
+
+ONOFF:
+- hyperref
+- fancyvrb
+
+
+# Packages for specific functionality that have to be chosen
+
+quotes:
+  - csquotes
+  - quoting

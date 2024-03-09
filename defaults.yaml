@@ -5,6 +5,11 @@ header_one_is_title: True
 escape_characters: "_%&#"
 latex_symb: True
 use_emph: []
+
+# Packages
 pkg_hyperref: True
 pkg_fancyvrb: True
+pkg_quotes: "csquotes"
+
+# Package arguments
 pkg_fancyvrb_args: "frame=single"
