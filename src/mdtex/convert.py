@@ -54,18 +54,17 @@ class MarkdownParser:
 
     def sections(self, text):
         cfg = self.cfg
-        text = re.sub(xpr.headersix, rf"\\{cfg.headersix}{{\1}}", text)
-        text = re.sub(xpr.headerfive, rf"\\{cfg.headerfive}{{\1}}", text)
-        text = re.sub(xpr.headerfour, rf"\\{cfg.headerfour}{{\1}}", text)
-        text = re.sub(xpr.headerthree, rf"\\{cfg.headerthree}{{\1}}", text)
-        text = re.sub(xpr.headertwo, rf"\\{cfg.headertwo}{{\1}}", text)
-        if cfg.headerone != "title":
-            text = re.sub(xpr.headerone, rf"\\{cfg.headerone}{{\1}}", text)
+        for i in range(6, 1, -1):
+            search = xpr.headers[i]
+            replace = rf"\\{cfg.headers[i]}{{\1}}"
+            text = re.sub(search, replace, text)
+        if cfg.headers[1] != "title":
+            text = re.sub(xpr.headers[1], rf"\\{cfg.headers[1]}{{\1}}", text)
         else:
-            title_match = re.search(xpr.headerone, text)
+            title_match = re.search(xpr.headers[1], text)
             if title_match is not None:
                 cfg.title = title_match.groups()[0] # pylint: disable=W0201
-            text = re.sub(xpr.headerone, "", text)
+            text = re.sub(xpr.headers[1], "", text)
         return text
     
     @staticmethod

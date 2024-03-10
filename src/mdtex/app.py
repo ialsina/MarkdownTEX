@@ -1,7 +1,6 @@
-# pylint: disable=E0203,E1101
-
 import argparse
 from pathlib import Path
+from typing import Sequence, Mapping, Any
 
 from mdtex.config import config, defaults, packages, PATH_IO
 
@@ -22,6 +21,7 @@ _DEFAULT_HEADERS = (
 
 
 def get_parsers():
+    # pylint: disable=W0621
 
     parser = argparse.ArgumentParser(add_help=True, formatter_class=argparse.RawTextHelpFormatter)
 
@@ -70,13 +70,35 @@ parser, parser_main, parser_package, parser_header = get_parsers()
 
 class App:
 
+    input: Path
+    output: Path
+    documentclass: str
+    title: str
+    date: str
+    header_one_is_title: bool
+    escape: Sequence[str]
+    break_hyphen_ligatures: bool
+    latex_symb: bool
+    verbose: bool
+    use_emph: Sequence[str]
+    headers: Mapping[int, str]
+    pkg: Mapping[str, bool]
+    cmd: Mapping[str, str]
+    env: Mapping[str, str]
+    env_args: Mapping[str, Any]
+
+
     def __init__(self, args=None):
         if args is None:
             args = []
         namespace, unknown_args = self._parse_arguments(args)
         self._set_args(namespace)
         header_args, unknown_args = self._parse_headers(unknown_args)
-        self._set_args(header_args)
+        self.headers = {
+            i: getattr(header_args, f"header{num}")
+            for i, num
+            in enumerate(_NUMBERS)
+        }
         package_args, used_packages = self._parse_package_args(unknown_args)
         self.packages = used_packages
         # TODO Confuses, e.g. --headerthree with "input"...

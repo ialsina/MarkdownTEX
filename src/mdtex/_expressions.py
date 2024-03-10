@@ -1,11 +1,13 @@
 from re import compile, DOTALL, MULTILINE # pylint: disable=W0622
 
-headerone = compile(r"^#{1}\s*(.+)\s*$", MULTILINE)
-headertwo = compile(r"^#{2}\s*(.+)\s*$", MULTILINE)
-headerthree = compile(r"^#{3}\s*(.+)\s*$", MULTILINE)
-headerfour = compile(r"^#{4}\s*(.+)\s*$", MULTILINE)
-headerfive = compile(r"^#{5}\s*(.+)\s*$", MULTILINE)
-headersix = compile(r"^#{6}\s*(.+)\s*$", MULTILINE)
+headers = {
+    1: compile(r"^#{1}\s*(.+)\s*$", MULTILINE),
+    2: compile(r"^#{2}\s*(.+)\s*$", MULTILINE),
+    3: compile(r"^#{3}\s*(.+)\s*$", MULTILINE),
+    4: compile(r"^#{4}\s*(.+)\s*$", MULTILINE),
+    5: compile(r"^#{5}\s*(.+)\s*$", MULTILINE),
+    6: compile(r"^#{6}\s*(.+)\s*$", MULTILINE),
+}
 headerany = compile(r"^#+\s*(.+)\s*$", MULTILINE)
 
 inline_code = compile(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)")

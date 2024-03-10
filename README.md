@@ -41,6 +41,7 @@ The following options can be passed:
   - `--escape [ESCAPE_CHARACTERS]` (or `-e`)
   - `--latex-symb {ON,OFF}` (or `-L`)
   - `--use-emph [{single,double}]`
+  - `--break-ligatures {ON,OFF}` (or `-H`)
   - `--pkg-<PACKAGE> {ON,OFF}`
   - `--pkg-<FUNCTIONALITY> [PACKAGE]`
   - `--pkg-<PACKAGE>-args [PACKAGE_ARGS]`
@@ -98,6 +99,10 @@ Set this option to `ON` or `OFF` to enable or disable the rendering of the LaTeX
 Usually, a single leading and trailing underscore (or asterisk) renders text in italic. This is translated to the `\textit` command in LaTeX. Similarly, a double leading and trailing underscore (or asterisk) renders text in bold. This is translated to the `\textbf` command in LaTeX.
 
 Passing the option `--use-emph single` will enable the usage of the alternative command `\emph` instead of `\textit`. Likewise, passing the option `--use-emph double` will enable the usage of the same command instead of `\textbf`.
+
+#### `break-hyphen-ligatures`
+
+LaTeX 
 
 #### Package customization
 
