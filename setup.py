@@ -12,6 +12,7 @@ setup(
     entry_points={
         "console_scripts": [
             "md2tex=mdtex.tools.convert:md2tex",
+            "md2tex-packages=mdtex.tools.package_help:md2tex_package_help"
         ]
     }
 )
