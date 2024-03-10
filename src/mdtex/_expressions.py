@@ -19,10 +19,10 @@ environment = compile(
     DOTALL+MULTILINE
 )
 
-list_dash = compile(r"\n(-\s*.*?\n)+\n", MULTILINE)
-list_ast = compile(r"\n(\*\s*.*?\n)+\n", MULTILINE)
-list_plus = compile(r"\n(\+\s*.*?\n)+\n", MULTILINE)
-list_num = compile(r"\n(\d+\.\s*.*?\n)+\n", MULTILINE)
+list_dash = compile(r"\n(^\s{0,3}\-\s+.*$\n)+\n", MULTILINE)
+list_ast = compile(r"\n^(\s{0,3}\*\s+.*?\n)+\n", MULTILINE)
+list_plus = compile(r"\n^(\s{0,3}\+\s+.*?\n)+\n", MULTILINE)
+list_num = compile(r"\n^(\s{0,3}\d+\.+\s.*?\n)+\n", MULTILINE)
 
 emph_3ast = compile(r"(?<!\*)\*{3}(\w[^\*\n]*?\w)\*{3}(?!\*)",)
 emph_3usc = compile(r"(?<!_)_{3}(\w[^\_\n]*?\w)_{3}(?!_)")

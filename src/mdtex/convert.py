@@ -166,9 +166,9 @@ class MarkdownParser:
     @staticmethod
     def enumerate(text):
         envs_patterns = [
-            ("itemize", xpr.list_dash, lambda x: x.lstrip("-")),
-            ("itemize", xpr.list_ast, lambda x: x.lstrip("*")),
-            ("itemize", xpr.list_plus, lambda x: x.lstrip("+")),
+            ("itemize", xpr.list_dash, lambda x: x.lstrip(" -")),
+            ("itemize", xpr.list_ast, lambda x: x.lstrip(" *")),
+            ("itemize", xpr.list_plus, lambda x: x.lstrip(" +")),
             ("enumerate", xpr.list_num, lambda x: x.split(".", 1)[1])
         ]
         for env, pattern, strip_fun in envs_patterns:
@@ -177,12 +177,13 @@ class MarkdownParser:
                 if match_ is None:
                     break
                 start, end = match_.span()
+                group = match_.group().strip(" \n")
                 content = "\n".join([
-                    "\\item " + strip_fun(item).strip()
-                    for item in match_.group().strip().split("\n")
+                    "\\item " + strip_fun(item).strip(" \n")
+                    for item in group.split("\n")
                 ])
                 texenv = LatexEnvironment(name=env, content=content)
-                text = text[:start] + f"\n{str(texenv)}\n" + text[end:]
+                text = text[:start] + f"\n\n{str(texenv)}\n\n" + text[end:]
         return text
     
     def emph(self, text):
