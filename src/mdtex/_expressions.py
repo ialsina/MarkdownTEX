@@ -6,6 +6,7 @@ headerthree = compile(r"^#{3}\s*(.+)\s*$", MULTILINE)
 headerfour = compile(r"^#{4}\s*(.+)\s*$", MULTILINE)
 headerfive = compile(r"^#{5}\s*(.+)\s*$", MULTILINE)
 headersix = compile(r"^#{6}\s*(.+)\s*$", MULTILINE)
+headerany = compile(r"^#+\s*(.+)\s*$", MULTILINE)
 
 inline_code = compile(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)")
 block_code = compile(r"^```(.*?)\n(.*?)\n```$", MULTILINE+DOTALL)

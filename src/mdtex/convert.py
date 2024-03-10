@@ -10,6 +10,8 @@ from .app import App
 from .commands import execute
 from .environment import LatexEnvironment, LatexDocument
 
+_REGEX_ESCAPE_CHARACTERS = "\\$^.+*"
+
 class MarkdownParser:
 
     def __init__(self, markdown, cfg=None, **kwargs):
@@ -40,6 +42,16 @@ class MarkdownParser:
         if self._latex is None:
             self._latex = self.parse()
         return self._latex
+    
+    @property
+    def escape_characters(self):
+        chrlst = list(self.cfg.escape_characters)
+        if self.cfg.latex_symb:
+            chrlst += ["LaTeX"]
+        if "\\" in chrlst:
+            chrlst.remove("\\")
+            chrlst = ["\\"] + chrlst
+        return chrlst
 
     def sections(self, text):
         cfg = self.cfg
@@ -113,22 +125,37 @@ class MarkdownParser:
             text = text[:start] + str(texenv) + text[end:]
         return text
 
-    def _get_shielded_positions(self, text):
-        shield = []
+    def _get_shielded_positions_href(self, text):
+        shielded_positions = []
+        for match_ in re.finditer(xpr.href, text):
+            span = match_.span()
+            offset = (
+                match_.group().index("(") + 1,
+                match_.group().index(")"),
+            )
+            shielded_positions.append((
+                span[0] + offset[0],
+                span[1] + offset[1]
+            ))
+        return shielded_positions
 
-        env_verbatim = self.cfg.env["verbatim"]
+    def _get_shielded_positions(self, text, character=None):
+        shielded_positions = []
 
-        # Populate verbatims
-        # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
-        for verbatim in re.finditer(rf"\\begin{{{env_verbatim}}}.+?\\end{{{env_verbatim}}}", text, flags=DOTALL):
-            shield.append(verbatim.span())
-        # Populate comments
-        for comment in re.finditer(xpr.comment, text):
-            shield.append(comment.span())
-        # Populate hrefs (only first argument)
-        for href in re.finditer(r"\\href\{.+?\}", text, flags=MULTILINE):
-            shield.append(href.span())
-        return shield
+        shield_patterns = (
+            xpr.comment,
+            xpr.block_code,
+            xpr.headerany,
+        )
+
+        for pattern in shield_patterns:
+            for match_ in re.finditer(pattern, text):
+                shielded_positions.append(match_.span())
+
+        # Populate hrefs (only second argument)
+        if character != "\\":
+            shielded_positions.extend(self._get_shielded_positions_href(text))            
+        return sorted(shielded_positions, key=lambda tup: tup[0])
     
     @staticmethod
     def href(text):
@@ -144,7 +171,7 @@ class MarkdownParser:
         ]
         for env, pattern, strip_fun in envs_patterns:
             while True:
-                match_ = re.search(pattern, text, flags=MULTILINE)
+                match_ = re.search(pattern, text)
                 if match_ is None:
                     break
                 start, end = match_.span()
@@ -170,22 +197,18 @@ class MarkdownParser:
     def escape(self, text):
         """Escape characters"""
 
-        # List of spans of verbatims and comments in text
-        shield = self._get_shielded_positions(text)
-
-        escape_characters = self.cfg.escape_characters
-        if self.cfg.latex_symb:
-            escape_characters = list(escape_characters) + ["LaTeX"]
-
         # Positions in text to be escaped
         escape_positions = set()
+        escape_characters = self.escape_characters
         
         # Populate escape_positins (for all escape characteres)
         for ch in escape_characters:
-            for match_ in re.finditer(ch, text):
+            # List of spans of verbatims and comments in text
+            shield = self._get_shielded_positions(text, ch)
+            for match_ in re.finditer(_regex_escape(ch), text):
                 pos = match_.start()
                 if any(start <= pos < end for start, end in shield):
-                    # In verbatim, do not escape
+                    # In shielded position, do not escape
                     continue
                 escape_positions.add(pos)
 
@@ -195,7 +218,6 @@ class MarkdownParser:
         text = list(text)
         for pos in sorted(escape_positions, reverse=True):
             text.insert(pos, "\\")
-        
         return "".join(text)
     
     @staticmethod
@@ -224,6 +246,7 @@ class MarkdownParser:
     def parse(self):
         text = self.markdown
         for fun in (
+            self.escape,
             self.sections,
             self.inline_code,
             self.block_code,
@@ -232,9 +255,14 @@ class MarkdownParser:
             self.href,
             self.enumerate,
             self.emph,
-            self.escape,
             self.comments,
             self.preamble,
         ):
             text = fun(text)
         return text
+
+
+def _regex_escape(ch):
+    if ch in _REGEX_ESCAPE_CHARACTERS:
+        return "\\" + ch
+    return ch
