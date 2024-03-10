@@ -1,92 +1,107 @@
-#pylint: disable=E0203,E1101
+# pylint: disable=E0203,E1101
 
 import argparse
 from pathlib import Path
-import re
 
-from mdtex.config import config, defaults, PATH_IO
+from mdtex.config import config, defaults, packages, PATH_IO
+
+_ON_OFF = ["ON", "OFF"]
+_NUMBERS = ("zero", "one", "two", "three", "four", "five", "six")
+_DEFAULT_HEADERS = (
+    "part",
+    "chapter",
+    "section",
+    "subsection",
+    "subsubsection",
+    "paragraph",
+    "subparagraph",
+    "subparagraph",
+)
+
+
+def get_parsers():
+
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+
+    subparsers = parser.add_subparsers()
+    parser_main = subparsers.add_parser("main")
+    parser_main.add_argument("input", action="store", metavar="INPUT")
+    parser_main.add_argument("-o", "--output", action="store", default=None, metavar="OUTPUT")
+    parser_main.add_argument("-d", "--documentclass", action="store", metavar="DOCUMENTCLASS")
+    parser_main.add_argument("-T", "--title", action="store", default="", metavar="TITLE")
+    parser_main.add_argument("-A", "--author", action="store", default="", metavar="AUTHOR")
+    parser_main.add_argument("-D", "--date", action="store", default="", metavar="DATE")
+    parser_main.add_argument("-1", "--header-one-is-title", action="store", choices=_ON_OFF, metavar="HEADER_ONE_IS_TITLE")
+    parser_main.add_argument("-e", "--escape", action="store", dest="escape_characters", metavar="ESCAPE_CHARACTERS")
+    parser_main.add_argument("-L", "--latex-symb", action="store", choices=_ON_OFF, metavar="LATEX_SYMB")
+    parser_main.add_argument("-v", "--verbose", action="store_true")
+    parser_main.add_argument("--use-emph",
+                            action="store",
+                            nargs='*',
+                            choices=["single", "double"],
+                            dest="use_emph",
+                            )
+    parser_main.set_defaults(**{k: v for k, v in defaults.items() if not k.startswith("pkg_")})
+
+    parser_package = subparsers.add_parser("package")
+
+    for pkg in packages.on_off:
+        parser_package.add_argument(f"--pkg-{pkg}", action="store", choices=_ON_OFF, metavar="PKG")
+        parser_package.add_argument(f"--pkg-{pkg}-args", action="store", metavar="PKGARGS") #, nargs="*"
+
+    for functionality, pkglst in packages.functionality.items():
+        parser_package.add_argument(f"--pkg-{functionality}", action="store", choices=pkglst, metavar="PKG")
+        for pkg in pkglst:
+            parser_package.add_argument(f"--pkg-{pkg}-args", action="store", metavar="PKGARGS") #, nargs="*"
+
+    parser_package.set_defaults(**{k: v for k, v in defaults.items() if k.startswith("pkg_")})
+
+    parser_header = subparsers.add_parser("header")
+    for number in _NUMBERS:
+        parser_header.add_argument(f"--header{number}", action="store", metavar="HEADER")
+    
+    return parser, parser_main, parser_package, parser_header
+
+parser, parser_main, parser_package, parser_header = get_parsers()
+
 
 class App:
 
     def __init__(self, args=None):
         if args is None:
             args = []
-        self.args = self._parse_arguments(args)
-        for arg, value in self.args.items():
-            setattr(self, arg, value)
-        self._postprocess()
+        namespace, unknown_args = self._parse_arguments(args)
+        self._set_args(namespace)
+        header_args, unknown_args = self._parse_headers(unknown_args)
+        self._set_args(header_args)
+        package_args, used_packages = self._parse_package_args(unknown_args)
+        self.packages = used_packages
+        # TODO Confuses, e.g. --headerthree with "input"...
+        self.pkg = {}
+        self.cmd = {}
+        self.env = {}
+        self.env_args = {}
+        self._process_package_args(package_args)
     
-    def __iter__(self):
-        return iter({k: v for k, v in vars(self).items() if k != "args"}.items())
+    def _set_args(self, args):
+        for arg, value in vars(args).items():
+            setattr(self, arg, value)
 
-    @classmethod
-    def _get_parser(cls):
-        # pylint: disable=C0103
-        _ON_OFF = ["ON", "OFF"]
-
-        parser = argparse.ArgumentParser()
-        parser.add_argument("input", action="store")
-        parser.add_argument("-o", "--output", action="store", default=None)
-        parser.add_argument("-d", "--documentclass", action="store")
-        parser.add_argument("-T", "--title", action="store", default="")
-        parser.add_argument("-A", "--author", action="store", default="")
-        parser.add_argument("-D", "--date", action="store", default="")
-        parser.add_argument("-1", "--header-one-is-title", action="store", choices=_ON_OFF)
-        parser.add_argument("-e", "--escape", action="store", dest="escape_characters")
-        parser.add_argument("-L", "--latex-symb", action="store", choices=_ON_OFF)
-        parser.add_argument("-v", "--verbose", action="store_true")
-        parser.add_argument("--use-emph", action="store", nargs='*', choices=["single", "double"], dest="use_emph")
-        parser.add_argument("--pkg-fancyvrb", action="store", choices=_ON_OFF)
-        parser.add_argument("--pkg-fancyvrb-args", action="store", nargs="*")
-        parser.set_defaults(**defaults)
-        return parser
-
-    @staticmethod
-    def _parse_arguments(args):
-        parser = App._get_parser()
-        namespace, unknown_args = parser.parse_known_args(args)
-
+    def _parse_arguments(self, args):
+        namespace, unknown_args = parser.parse_known_args(["main"] + args)
         if not namespace.input.lower().endswith(".md"):
             raise ValueError(
                 f'Input file "{namespace.input}" must end in ".md"'
             )
+        namespace = self._transform_namespace(namespace)
+        namespace.input = self._normalize_input_path(namespace.input)
+        namespace.output = self._normalize_output_path(namespace.output, namespace.input)
+        return namespace, unknown_args
 
-        for key, value in vars(namespace).items():
-            if value == "ON":
-                setattr(namespace, key, True)
-            elif value == "OFF":
-                setattr(namespace, key, False)
-        
-        namespace.cmd_single = ("emph" if "single" in namespace.use_emph else "textit")
-        namespace.cmd_double = ("emph" if "double" in namespace.use_emph else "textbf")
-        namespace.env_verbatim = ("Verbatim" if namespace.pkg_fancyvrb else "verbatim")
-        namespace.arg_verbatim = (namespace.pkg_fancyvrb_args if namespace.pkg_fancyvrb else [])
-
-        # TODO Confuses, e.g. --headerthree with "input"...
-        headers_args, _ = App._parse_headers(namespace.documentclass,
-                                             namespace.header_one_is_title,
-                                             unknown_args,
-        )
-
-        args = vars(namespace)
-        args.update(vars(headers_args))
-
-        return args
-    
-    @staticmethod
-    def _parse_headers(document_class, header_one_is_title, args):
-        numbers = ("zero", "one", "two", "three", "four", "five", "six")
-        default_headers = (
-            "part",
-            "chapter",
-            "section",
-            "subsection",
-            "subsubsection",
-            "paragraph",
-            "subparagraph",
-            "subparagraph",
-        )
+    def _parse_headers(self, args):
         offset = 0
+        header_one_is_title = self.header_one_is_title
+        document_class = self.documentclass
         if header_one_is_title:
             offset -= 1
         if document_class == "book":
@@ -99,26 +114,54 @@ class App:
             raise ValueError(
                 f"Wrong value for document class: {document_class}."
             )
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--headerone",
-                            action="store",
-                            nargs=1,
-                            default=("title"
-                                     if header_one_is_title
-                                     else default_headers[1 + offset]
-                            ),
-        )
-
-        for i in range(2, 7):
-            parser.add_argument(f"--header{numbers[i]}",
-                                action="store",
-                                nargs=1,
-                                default=default_headers[i + offset]
+        default_headers = {}
+        default_headers.update({
+            "headerone": (
+                "title"
+                if header_one_is_title
+                else _DEFAULT_HEADERS[1 + offset]
             )
-        return parser.parse_known_args(args)
+        })
+        default_headers.update({
+            f"header{_NUMBERS[i]}": _DEFAULT_HEADERS[i + offset]
+            for i in range(2, 7)
+        })
+        parser_header.set_defaults(**default_headers)
+        return parser.parse_known_args(["header"] + args)
+    
+    def _parse_package_args(self, args):
+        namespace = parser.parse_args(["package"] + args)
+        namespace = self._transform_namespace(namespace)
+        namespace_dct = vars(namespace)
+        used_packages = []
+        used_packages.extend([pkg for pkg in packages.on_off if namespace_dct.get(f"pkg_{pkg}")])
+        for functionality, _ in packages.functionality.items():
+            used_packages.append(namespace_dct.get(f"pkg_{functionality}"))
+        return namespace, sorted(used_packages)
+
+    
+    def _process_package_args(self, args):
+        self.pkg.update({pkg: (pkg in self.packages) for pkg in packages.allowed})
+        self.cmd.update({
+            "single": ("emph" if "single" in self.use_emph else "textit"),
+            "double": ("emph" if "double" in self.use_emph else "textbf")
+        })
+        self.env.update({
+            "verbatim": ("Verbatim" if "fancyvrb" in self.packages else "verbatim"),
+            "quote": (
+                "displayquote" if "csquotes" in self.packages else
+                "quoting" if "quoting" in self.packages else
+                ""
+                ),
+        })
+        self.env_args.update({
+            "verbatim": (args.pkg_fancyvrb_args if "fancyvrb" in self.packages else []),
+            "quote": [],
+        })
+
 
     @staticmethod
-    def _get_input_path(input_: str):
+    def _normalize_input_path(input_: str):
         path_in = Path(input_)
         if path_in.is_absolute():
             if path_in.exists():
@@ -133,7 +176,7 @@ class App:
         )
 
     @staticmethod
-    def _get_output_path(output: str, input_path: Path):
+    def _normalize_output_path(output: str, input_path: Path):
         path_in = input_path
         dir_default = (
             path_in.parent
@@ -153,17 +196,23 @@ class App:
             return dir_default / path_out
         return path_out
 
-    def _postprocess(self):
-        self.input = self._get_input_path(self.input)
-        self.output = self._get_output_path(self.output, self.input)
+    @staticmethod
+    def _transform_namespace(namespace, from_=None, into=None):
+        if from_ is None:
+            from_ = []
+        if into is None:
+            into = []
+        from_ = _ON_OFF + from_
+        into = [True, False] + into
+        dct = dict(zip(from_, into))
+        for key, value in vars(namespace).items():
+            try:
+                if value in dct:
+                    setattr(namespace, key, dct[value])
+            except TypeError:
+                continue
+        return namespace
 
-        packages = set()
-        for k, v in vars(self).items():
-            match_ = re.match(r"^pkg_(.+)(?!_args)$", k)
-            if match_ is not None and v is True:
-                packages.add(match_.groups()[0])
-        self.packages = sorted(packages)
-    
     def update(self, *args, **kwargs):
         args = tuple(filter(lambda x: x is not None, args))
         if all(isinstance(arg, dict) for arg in args):
