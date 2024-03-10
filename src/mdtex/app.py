@@ -177,24 +177,20 @@ class App:
         )
 
     @staticmethod
-    def _normalize_output_path(output: str, input_path: Path):
-        path_in = input_path
-        dir_default = (
+    def _normalize_output_path(output: str | None, path_in: Path):
+        default_name = path_in.name.rstrip(path_in.suffix) + ".tex"
+        default_dir = (
             path_in.parent
             if config.default_output_dir_as_input_dir
             else Path(".").absolute()
         )
-        path_out = (
-            Path(output)
-            if output is not None
-            else None
-        )
-        if path_out is None:
-            name_out = path_in.name
-            name_out = name_out.rstrip(path_in.suffix) + ".tex"
-            return dir_default / name_out
+        if output is None:
+            return default_dir / default_name
+        path_out = Path(output)
         if not path_out.is_absolute():
-            return dir_default / path_out
+            path_out = default_dir / path_out
+        if path_out.is_dir():
+            return path_out / default_name
         return path_out
 
     @staticmethod
