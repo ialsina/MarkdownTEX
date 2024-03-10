@@ -1,14 +1,14 @@
 #pylint: disable=E0203,E1101
 
-import sys
 import re
 from re import DOTALL, MULTILINE
 from functools import partial
 
-from mdtex.app import App
-from mdtex.commands import execute
-from mdtex.environment import LatexEnvironment, LatexDocument
 
+from mdtex import _expressions as xpr
+from .app import App
+from .commands import execute
+from .environment import LatexEnvironment, LatexDocument
 
 class MarkdownParser:
 
@@ -43,24 +43,24 @@ class MarkdownParser:
 
     def sections(self, text):
         cfg = self.cfg
-        text = re.sub(r"^#{6}\s*(.+)\s*$", rf"\\{cfg.headersix}{{\1}}", text, flags=MULTILINE)
-        text = re.sub(r"^#{5}\s*(.+)\s*$", rf"\\{cfg.headerfive}{{\1}}", text, flags=MULTILINE)
-        text = re.sub(r"^#{4}\s*(.+)\s*$", rf"\\{cfg.headerfour}{{\1}}", text, flags=MULTILINE)
-        text = re.sub(r"^#{3}\s*(.+)\s*$", rf"\\{cfg.headerthree}{{\1}}", text, flags=MULTILINE)
-        text = re.sub(r"^#{2}\s*(.+)\s*$", rf"\\{cfg.headertwo}{{\1}}", text, flags=MULTILINE)
+        text = re.sub(xpr.headersix, rf"\\{cfg.headersix}{{\1}}", text)
+        text = re.sub(xpr.headerfive, rf"\\{cfg.headerfive}{{\1}}", text)
+        text = re.sub(xpr.headerfour, rf"\\{cfg.headerfour}{{\1}}", text)
+        text = re.sub(xpr.headerthree, rf"\\{cfg.headerthree}{{\1}}", text)
+        text = re.sub(xpr.headertwo, rf"\\{cfg.headertwo}{{\1}}", text)
         if cfg.headerone != "title":
-            text = re.sub(r"^#{1}\s*(.+)\s*$", rf"\\{cfg.headerone}{{\1}}", text, flags=MULTILINE)
+            text = re.sub(xpr.headerone, rf"\\{cfg.headerone}{{\1}}", text)
         else:
-            title_match = re.search(r"^#{1}\s*(.+)\s*$", text, flags=MULTILINE)
+            title_match = re.search(xpr.headerone, text)
             if title_match is not None:
                 cfg.title = title_match.groups()[0] # pylint: disable=W0201
-            text = re.sub(r"^#{1}\s*(.+)\s*$", "", text, flags=MULTILINE)
+            text = re.sub(xpr.headerone, "", text)
         return text
     
     @staticmethod
     def inline_code(text):
         """Inline literal code"""
-        text = re.sub(r"(?<![`\\])`([^`]+?)(?<!\\)`(?!`)", r"\\texttt{\1}", text)
+        text = re.sub(xpr.inline_code, r"\\texttt{\1}", text)
         return text
 
     def block_code(self, text):
@@ -73,11 +73,10 @@ class MarkdownParser:
             return ""
 
         cfg = self.cfg
-        pattern_enclosing = r"^```(.*?)\n(.*?)\n```$"
         TexEnv = self.code_environment_factory # pylint: disable=C0103
         
         while True:
-            match_ = re.search(pattern_enclosing, text, flags=DOTALL+MULTILINE)
+            match_ = re.search(xpr.block_code, text)
             if match_ is None:
                 break
             arg, content = match_.groups()
@@ -90,11 +89,10 @@ class MarkdownParser:
 
     def block_quotes(self, text):
         """Block quotes"""
-        pattern = r"\n((^>+.*\n)+)"
         TexEnv = self.quote_environment_factory # pylint: disable=C0103
 
         while True:
-            match_ = re.search(pattern, text, flags=MULTILINE)
+            match_ = re.search(xpr.block_quotes, text)
             if match_ is None:
                 break
             content, _ = match_.groups()
@@ -105,10 +103,8 @@ class MarkdownParser:
         return text
         
     def environments(self, text):
-        pattern_enclosing = r"\[//\]:\s(?:<>|#)\s\(%texenv begin (.*)\)(.+?)\[//\]:\s(?:<>|#)\s\(%texenv end \1\)"
         while True:
-            
-            match_ = re.search(pattern_enclosing, text, flags=DOTALL+MULTILINE)
+            match_ = re.search(xpr.environment, text)
             if match_ is None:
                 break
             name, content = match_.groups()
@@ -116,7 +112,6 @@ class MarkdownParser:
             texenv = LatexEnvironment(name=name, content=content)
             text = text[:start] + str(texenv) + text[end:]
         return text
-
 
     def _get_shielded_positions(self, text):
         shield = []
@@ -128,25 +123,24 @@ class MarkdownParser:
         for verbatim in re.finditer(rf"\\begin{{{env_verbatim}}}.+?\\end{{{env_verbatim}}}", text, flags=DOTALL):
             shield.append(verbatim.span())
         # Populate comments
-        for comment in re.finditer(r"\[//\]:\s(?:<>|#)\s\((.*)\)", text):
+        for comment in re.finditer(xpr.comment, text):
             shield.append(comment.span())
         # Populate hrefs (only first argument)
         for href in re.finditer(r"\\href\{.+?\}", text, flags=MULTILINE):
             shield.append(href.span())
         return shield
-        
     
     @staticmethod
     def href(text):
-        return re.sub(r"\[(.+?)\]\((.+?)\)", r"\\href{\2}{\1}", text)
+        return re.sub(xpr.href, r"\\href{\2}{\1}", text)
     
     @staticmethod
     def enumerate(text):
         envs_patterns = [
-            ("itemize", r"\n(-\s*.*?\n)+\n", lambda x: x.lstrip("-")),
-            ("itemize", r"\n(\*\s*.*?\n)+\n", lambda x: x.lstrip("*")),
-            ("itemize", r"\n(\+\s*.*?\n)+\n", lambda x: x.lstrip("+")),
-            ("enumerate", r"\n(\d+\.\s*.*?\n)+\n", lambda x: x.split(".", 1)[1])
+            ("itemize", xpr.list_dash, lambda x: x.lstrip("-")),
+            ("itemize", xpr.list_ast, lambda x: x.lstrip("*")),
+            ("itemize", xpr.list_plus, lambda x: x.lstrip("+")),
+            ("enumerate", xpr.list_num, lambda x: x.split(".", 1)[1])
         ]
         for env, pattern, strip_fun in envs_patterns:
             while True:
@@ -165,12 +159,12 @@ class MarkdownParser:
     def emph(self, text):
         cmd_double = self.cfg.cmd["double"]
         cmd_single = self.cfg.cmd["single"]
-        text = re.sub(r"(?<!\*)\*{3}(\w[^\*\n]*?\w)\*{3}(?!\*)", rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
-        text = re.sub(r"(?<!_)_{3}(\w[^\_\n]*?\w)_{3}(?!_)",rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
-        text = re.sub(r"(?<!\*)\*{2}(\w[^\*\n]*?\w)\*{2}(?!\*)", rf"\\{cmd_double}{{\1}}", text)
-        text = re.sub(r"(?<!_)_{2}(\w[^\_\n]*?\w)_{2}(?!_)", rf"\\{cmd_double}{{\1}}", text)
-        text = re.sub(r"(?<!\*)\*{1}(\w[^\*\n]*?\w)\*{1}(?!\*)", rf"\\{cmd_single}{{\1}}", text)
-        text = re.sub(r"(?<!_)_{1}(\w[^\*\n]*?\w)_{1}(?!_)", rf"\\{cmd_single}{{\1}}", text)
+        text = re.sub(xpr.emph_3ast, rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
+        text = re.sub(xpr.emph_3usc, rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
+        text = re.sub(xpr.emph_2ast, rf"\\{cmd_double}{{\1}}", text)
+        text = re.sub(xpr.emph_2usc, rf"\\{cmd_double}{{\1}}", text)
+        text = re.sub(xpr.emph_1ast, rf"\\{cmd_single}{{\1}}", text)
+        text = re.sub(xpr.emph_1usc, rf"\\{cmd_single}{{\1}}", text)
         return text
 
     def escape(self, text):
@@ -210,11 +204,11 @@ class MarkdownParser:
 
     def comments(self, text):
         commands = set()
-        for comment in re.finditer(r"\[//\]:\s+(?:<>|#)\s+\((.*)\)", text):
+        for comment in re.finditer(xpr.comment, text):
             content = comment.groups()[0]
             position = comment.start()
             if content[0] == "%":
-                command, arg = re.match(r"% (\w*)\s*(.*)", content).groups()
+                command, arg = re.match(xpr.comment_cmd, content).groups()
                 args = arg.split()
                 commands.add(command)
                 new_text, cfg = execute(command=command, args=args, text=text, position=position)
@@ -244,14 +238,3 @@ class MarkdownParser:
         ):
             text = fun(text)
         return text
-
-
-if __name__ == "__main__":
-
-    app = App(sys.argv[1:])
-
-    with open(app.input, "r", encoding="utf-8") as f:
-        md_parser = MarkdownParser(f.read(), cfg=app)
-
-    with open(app.output, "w", encoding="utf-8") as f:
-        f.write(md_parser.latex)
