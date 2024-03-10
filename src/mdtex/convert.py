@@ -23,10 +23,10 @@ class MarkdownParser:
     def code_environment_factory(self):
         cfg = self.cfg
         return partial(
-            LatexEnvironment, name=cfg.env_verbatim,
-            args=cfg.arg_verbatim, indent_content=False
+            LatexEnvironment, name=cfg.env["verbatim"],
+            args=cfg.env_args.get("verbatim"), indent_content=False
         )
-
+    
     @property
     def latex(self):
         if self._latex is None:
@@ -60,10 +60,9 @@ class MarkdownParser:
         def _convert_arg(arg):
             if arg == "":
                 return arg
-            if cfg.pkg_fancyvrb:
+            if cfg.pkg["fancyvrb"]:
                 return f"label={arg}"
-            else:
-                return ""
+            return ""
 
         cfg = self.cfg
         pattern_enclosing = r"^```(.*?)\n(.*?)\n```$"
@@ -80,10 +79,11 @@ class MarkdownParser:
                 texenv.args.append(_convert_arg(arg))
             text = text[:start] + str(texenv) + text[end:]
         return text
-
+        
     def environments(self, text):
         pattern_enclosing = r"\[//\]:\s(?:<>|#)\s\(%texenv begin (.*)\)(.+?)\[//\]:\s(?:<>|#)\s\(%texenv end \1\)"
         while True:
+            
             match_ = re.search(pattern_enclosing, text, flags=DOTALL+MULTILINE)
             if match_ is None:
                 break
@@ -97,7 +97,7 @@ class MarkdownParser:
     def _get_shielded_positions(self, text):
         shield = []
 
-        env_verbatim = self.cfg.env_verbatim
+        env_verbatim = self.cfg.env["verbatim"]
 
         # Populate verbatims
         # Ignoring case to also capture environment `Verbatim` from package `fancyvrb`
@@ -139,8 +139,8 @@ class MarkdownParser:
         return text
     
     def emph(self, text):
-        cmd_double = self.cfg.cmd_double
-        cmd_single = self.cfg.cmd_single
+        cmd_double = self.cfg.cmd["double"]
+        cmd_single = self.cfg.cmd["single"]
         text = re.sub(r"(?<!\*)\*{3}(\w[^\*\n]*?\w)\*{3}(?!\*)", rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
         text = re.sub(r"(?<!_)_{3}(\w[^\_\n]*?\w)_{3}(?!_)",rf"\\{cmd_double}{{\\{cmd_single}{{\1}}}}", text)
         text = re.sub(r"(?<!\*)\*{2}(\w[^\*\n]*?\w)\*{2}(?!\*)", rf"\\{cmd_double}{{\1}}", text)
