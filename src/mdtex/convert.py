@@ -28,6 +28,14 @@ class MarkdownParser:
         )
     
     @property
+    def quote_environment_factory(self):
+        cfg = self.cfg
+        return partial(
+            LatexEnvironment, name=cfg.env["quote"],
+            args=cfg.env_args.get("quote"), indent_content=True
+        )
+
+    @property
     def latex(self):
         if self._latex is None:
             self._latex = self.parse()
@@ -77,6 +85,22 @@ class MarkdownParser:
             texenv = TexEnv(content=content)
             if arg:
                 texenv.args.append(_convert_arg(arg))
+            text = text[:start] + str(texenv) + text[end:]
+        return text
+
+    def block_quotes(self, text):
+        """Block quotes"""
+        pattern = r"\n((^>+.*\n)+)"
+        TexEnv = self.quote_environment_factory # pylint: disable=C0103
+
+        while True:
+            match_ = re.search(pattern, text, flags=MULTILINE)
+            if match_ is None:
+                break
+            content, _ = match_.groups()
+            content = "\n".join([line.strip("> ") for line in content.split("\n")])
+            start, end = match_.span()
+            texenv = TexEnv(content=content)
             text = text[:start] + str(texenv) + text[end:]
         return text
         
@@ -209,6 +233,7 @@ class MarkdownParser:
             self.sections,
             self.inline_code,
             self.block_code,
+            self.block_quotes,
             self.environments,
             self.href,
             self.enumerate,
