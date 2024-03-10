@@ -7,6 +7,7 @@ from mdtex.config import config, defaults, packages, PATH_IO
 
 _ON_OFF = ["ON", "OFF"]
 _NUMBERS = ("zero", "one", "two", "three", "four", "five", "six")
+_DOCUMENT_CLASSES = ("book", "report", "article")
 _DEFAULT_HEADERS = (
     "part",
     "chapter",
@@ -21,13 +22,13 @@ _DEFAULT_HEADERS = (
 
 def get_parsers():
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(add_help=True, formatter_class=argparse.RawTextHelpFormatter)
 
     subparsers = parser.add_subparsers()
     parser_main = subparsers.add_parser("main")
     parser_main.add_argument("input", action="store", metavar="INPUT")
     parser_main.add_argument("-o", "--output", action="store", default=None, metavar="OUTPUT")
-    parser_main.add_argument("-d", "--documentclass", action="store", metavar="DOCUMENTCLASS")
+    parser_main.add_argument("-d", "--documentclass", action="store", choices=_DOCUMENT_CLASSES, metavar="DOCUMENTCLASS")
     parser_main.add_argument("-T", "--title", action="store", default="", metavar="TITLE")
     parser_main.add_argument("-A", "--author", action="store", default="", metavar="AUTHOR")
     parser_main.add_argument("-D", "--date", action="store", default="", metavar="DATE")
