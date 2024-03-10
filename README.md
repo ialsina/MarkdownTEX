@@ -100,9 +100,13 @@ Usually, a single leading and trailing underscore (or asterisk) renders text in 
 
 Passing the option `--use-emph single` will enable the usage of the alternative command `\emph` instead of `\textit`. Likewise, passing the option `--use-emph double` will enable the usage of the same command instead of `\textbf`.
 
-#### `break-hyphen-ligatures`
+#### `break-ligatures`
 
-LaTeX 
+LaTeX renders ligatures. This can be against intended purpose for certain purposes. For instance, a double dash (`--`) is often used for various purposes in coding, but for LaTeX, that is an *en dash*. There are several mechanisms to break ligatures. Here, we use `f{}f`.
+
+To provide a list of ligatures to provide, use the option and pass it alongside, e.g. `--break-ligatures ff hyphen`. This would mean, break `ff` and `--`.
+
+Please, note that `hyphen` is shorthand for `--`. The reason of this shortcut is that passing a double hyphen through the command line as an argument can be challenging as that is internally used as a symbol for argument parsing.
 
 #### Package customization
 
