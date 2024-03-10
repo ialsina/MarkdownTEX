@@ -1,7 +1,6 @@
 #pylint: disable=E0203,E1101
 
 import re
-from re import DOTALL, MULTILINE
 from functools import partial
 
 
@@ -125,36 +124,39 @@ class MarkdownParser:
             text = text[:start] + str(texenv) + text[end:]
         return text
 
-    def _get_shielded_positions_href(self, text):
+    def _get_shielded_positions_href(self, text, character=None):
         shielded_positions = []
         for match_ in re.finditer(xpr.href, text):
             span = match_.span()
-            offset = (
-                match_.group().index("(") + 1,
-                match_.group().index(")"),
+            group = match_.group()
+            span_text = (
+                span[0] + group.index("[") + 1,
+                span[1] + group.index("]")
             )
-            shielded_positions.append((
-                span[0] + offset[0],
-                span[1] + offset[1]
-            ))
+            span_link = (
+                span[0] + group.index("(") + 1,
+                span[1] + group.index(")")
+            )
+            # backslash must be escaped also from link
+            if character == "\\":
+                shielded_positions.append(span_link)
+            shielded_positions.append(span_text)
         return shielded_positions
 
     def _get_shielded_positions(self, text, character=None):
         shielded_positions = []
-
         shield_patterns = (
             xpr.comment,
             xpr.block_code,
             xpr.headerany,
         )
-
         for pattern in shield_patterns:
             for match_ in re.finditer(pattern, text):
                 shielded_positions.append(match_.span())
-
-        # Populate hrefs (only second argument)
-        if character != "\\":
-            shielded_positions.extend(self._get_shielded_positions_href(text))            
+        # Extend with positions coming from hrefs
+        shielded_positions.extend(
+            self._get_shielded_positions_href(text, character=character)
+        )
         return sorted(shielded_positions, key=lambda tup: tup[0])
     
     @staticmethod
@@ -240,6 +242,29 @@ class MarkdownParser:
                 text = re.sub(comment.re, MarkdownParser._to_comment(content), text)
         return text
     
+    def quotation_marks(self, text):
+
+        # pylint: disable=W0101
+        quotations_patterns = [
+            (("``", "''"), xpr.double_quotations),
+            (("`", "'"), xpr.single_quotations),
+        ]
+        shield = self._get_shielded_positions(text)
+        for quotations, pattern in quotations_patterns:
+            while True:
+                match_ = re.search(pattern, text)
+                if match_ is None:
+                    break
+                start, end = match_.span()
+                content = match_.groups()[0]
+                if any(s <= start < e for s, e in shield):
+                    # In shielded position, do not replace
+                    continue
+                quotation_text = quotations[0] + content + quotations[1]
+                text = text[:start] + quotation_text + text[end:]
+        return text
+            
+
     def preamble(self, text):
         return str(LatexDocument(text, self.cfg))
 
@@ -249,18 +274,18 @@ class MarkdownParser:
             self.escape,
             self.sections,
             self.inline_code,
-            self.block_code,
-            self.block_quotes,
             self.environments,
             self.href,
             self.enumerate,
             self.emph,
+            self.quotation_marks,
             self.comments,
+            self.block_code,
+            self.block_quotes,
             self.preamble,
         ):
             text = fun(text)
         return text
-
 
 def _regex_escape(ch):
     if ch in _REGEX_ESCAPE_CHARACTERS:

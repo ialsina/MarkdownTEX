@@ -1,4 +1,4 @@
-from re import compile, DOTALL, MULTILINE
+from re import compile, DOTALL, MULTILINE # pylint: disable=W0622
 
 headerone = compile(r"^#{1}\s*(.+)\s*$", MULTILINE)
 headertwo = compile(r"^#{2}\s*(.+)\s*$", MULTILINE)
@@ -33,3 +33,6 @@ emph_1usc = compile(r"(?<!_)_{1}(\w[^\*\n]*?\w)_{1}(?!_)",)
 
 comment = compile(r"\[//\]:\s+(?:<>|#)\s+\((.*)\)")
 comment_cmd = compile(r"% (\w*)\s*(.*)")
+
+single_quotations = compile(r"(?<![\w'])'{1}([^']+?)'{1}(?![\w'])")
+double_quotations = compile(r'(?<![\w"])"{1}([^"]+?)"{1}(?![\w"])')
