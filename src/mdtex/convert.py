@@ -229,8 +229,8 @@ class MarkdownParser:
                 t = re.sub(l, f"{l[0]}{{}}{l[1]}", t)
             return t
         cfg = self.cfg
-        if cfg.break_hyphen_ligatures:
-            text = _break("--", text)
+        for lig in cfg.break_ligatures:
+            text = _break(_regex_escape(lig), text)
         return text
     
     @staticmethod
@@ -299,7 +299,9 @@ class MarkdownParser:
             text = fun(text)
         return text
 
-def _regex_escape(ch):
-    if ch in _REGEX_ESCAPE_CHARACTERS:
-        return "\\" + ch
-    return ch
+def _regex_escape(s):
+    if len(s) > 1:
+        return "".join([_regex_escape(c) for c in s])
+    if s in _REGEX_ESCAPE_CHARACTERS:
+        return "\\" + s
+    return s

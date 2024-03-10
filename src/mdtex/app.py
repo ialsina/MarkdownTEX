@@ -8,6 +8,7 @@ from mdtex.config import config, defaults, packages, PATH_IO
 _ON_OFF = ["ON", "OFF"]
 _NUMBERS = ("zero", "one", "two", "three", "four", "five", "six")
 _DOCUMENT_CLASSES = ("book", "report", "article")
+_LIGATURE_KEYS = {"hyphen": "--"}
 _DEFAULT_HEADERS = (
     "part",
     "chapter",
@@ -34,7 +35,7 @@ def get_parsers():
     parser_main.add_argument("-D", "--date", action="store", default="", metavar="DATE")
     parser_main.add_argument("-1", "--header-one-is-title", action="store", choices=_ON_OFF, metavar="HEADER_ONE_IS_TITLE")
     parser_main.add_argument("-e", "--escape", action="store", dest="escape_characters", metavar="ESCAPE_CHARACTERS")
-    parser_main.add_argument("-H", "--break-hyphen-ligatures", action="store", choices=_ON_OFF, metavar="BREAK_HYPHEN_LIGATURES")
+    parser_main.add_argument("-B", "--break-ligatures", action="store", nargs='*', metavar="BREAK_HYPHEN_LIGATURES")
     parser_main.add_argument("-L", "--latex-symb", action="store", choices=_ON_OFF, metavar="LATEX_SYMB")
     parser_main.add_argument("-v", "--verbose", action="store_true")
     parser_main.add_argument("--use-emph",
@@ -98,6 +99,9 @@ class App:
         namespace = self._transform_namespace(namespace)
         namespace.input = self._normalize_input_path(namespace.input)
         namespace.output = self._normalize_output_path(namespace.output, namespace.input)
+        namespace.break_ligatures = [
+            _LIGATURE_KEYS.get(lig, lig) for lig in namespace.break_ligatures
+        ]
         return namespace, unknown_args
 
     def _parse_headers(self, args):
