@@ -34,6 +34,7 @@ def get_parsers():
     parser_main.add_argument("-D", "--date", action="store", default="", metavar="DATE")
     parser_main.add_argument("-1", "--header-one-is-title", action="store", choices=_ON_OFF, metavar="HEADER_ONE_IS_TITLE")
     parser_main.add_argument("-e", "--escape", action="store", dest="escape_characters", metavar="ESCAPE_CHARACTERS")
+    parser_main.add_argument("-H", "--break-hyphen-ligatures", action="store", choices=_ON_OFF, metavar="BREAK_HYPHEN_LIGATURES")
     parser_main.add_argument("-L", "--latex-symb", action="store", choices=_ON_OFF, metavar="LATEX_SYMB")
     parser_main.add_argument("-v", "--verbose", action="store_true")
     parser_main.add_argument("--use-emph",

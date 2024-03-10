@@ -5,6 +5,7 @@ header_one_is_title: True
 escape_characters: "_%&#$\\"
 latex_symb: True
 use_emph: []
+break_hyphen_ligatures: True
 
 # Packages
 pkg_hyperref: True

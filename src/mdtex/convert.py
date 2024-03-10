@@ -223,6 +223,16 @@ class MarkdownParser:
             text.insert(pos, "\\")
         return "".join(text)
     
+    def break_ligatures(self, text):
+        def _break(l, t):
+            while l in t:
+                t = re.sub(l, f"{l[0]}{{}}{l[1]}", t)
+            return t
+        cfg = self.cfg
+        if cfg.break_hyphen_ligatures:
+            text = _break("--", text)
+        return text
+    
     @staticmethod
     def _to_comment(text):
         return f"% {text}"
@@ -283,6 +293,7 @@ class MarkdownParser:
             self.comments,
             self.block_code,
             self.block_quotes,
+            self.break_ligatures,
             self.preamble,
         ):
             text = fun(text)
