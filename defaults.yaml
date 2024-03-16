@@ -6,10 +6,12 @@ escape_characters: "_%&#$\\"
 latex_symb: True
 use_emph: []
 break_ligatures: ["hyphen"]
+font: "lmodern"
 
 # Packages
 pkg_hyperref: True
 pkg_fancyvrb: True
+pkg_parskip: True
 pkg_quotes: "csquotes"
 
 # Package arguments

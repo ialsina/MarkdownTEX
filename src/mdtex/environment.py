@@ -7,7 +7,7 @@ class LatexDocument:
     def __init__(self, document, cfg: App):
         self.document = document
         self.cfg = cfg
-    
+
     def __str__(self):
         preamble = ""
         preamble += f"\\documentclass{{{self.cfg.documentclass}}}\n"
@@ -15,6 +15,7 @@ class LatexDocument:
         preamble += "\\usepackage[T1]{fontenc}\n"
         preamble += "\\usepackage[a4paper]{geometry}\n"
         preamble += "\\usepackage{enumitem}\n"
+        preamble += f"\\usepackage{{{self.cfg.font}}}\n"
         for pkg in self.cfg.packages:
             preamble += f"\\usepackage{{{pkg}}}\n"
         preamble += f"\\title{{{self.cfg.title}}}\n"

@@ -30,6 +30,7 @@ def get_parsers():
     parser_main.add_argument("input", action="store", metavar="INPUT")
     parser_main.add_argument("-o", "--output", action="store", default=None, metavar="OUTPUT")
     parser_main.add_argument("-d", "--documentclass", action="store", choices=_DOCUMENT_CLASSES, metavar="DOCUMENTCLASS")
+    parser_main.add_argument("-f", "--font", action="store", metavar="FONT")
     parser_main.add_argument("-T", "--title", action="store", default="", metavar="TITLE")
     parser_main.add_argument("-A", "--author", action="store", default="", metavar="AUTHOR")
     parser_main.add_argument("-D", "--date", action="store", default="", metavar="DATE")
@@ -75,6 +76,7 @@ class App:
     documentclass: str
     title: str
     date: str
+    font: str
     header_one_is_title: bool
     escape: Sequence[str]
     break_hyphen_ligatures: bool

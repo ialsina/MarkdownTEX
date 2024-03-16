@@ -5,7 +5,7 @@
 ONOFF:
 - hyperref
 - fancyvrb
-
+- parskip
 
 # Packages for specific functionality that have to be chosen
 
