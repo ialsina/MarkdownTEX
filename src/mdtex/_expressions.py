@@ -34,7 +34,7 @@ emph_1ast = compile(r"(?<!\*)\*{1}(\w[^\*\n]*?\w)\*{1}(?!\*)",)
 emph_1usc = compile(r"(?<!_)_{1}(\w[^\*\n]*?\w)_{1}(?!_)",)
 
 comment = compile(r"\[//\]:\s+(?:<>|#)\s+\((.*)\)")
-comment_cmd = compile(r"% (\w*)\s*(.*)")
+comment_cmd = compile(r"%\s*(\w*)\s*(.*)")
 
 single_quotations = compile(r"(?<![\w'])'{1}([^']+?)'{1}(?![\w'])")
 double_quotations = compile(r'(?<![\w"])"{1}([^"]+?)"{1}(?![\w"])')
