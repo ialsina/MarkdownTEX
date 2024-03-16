@@ -5,6 +5,7 @@ from functools import partial
 
 
 from mdtex import _expressions as xpr
+from ._exceptions import CommandError
 from .app import App
 from .commands import execute
 from .environment import LatexEnvironment, LatexDocument
@@ -242,7 +243,10 @@ class MarkdownParser:
             content = comment.groups()[0]
             position = comment.start()
             if content[0] == "%":
-                command, arg = re.match(xpr.comment_cmd, content).groups()
+                match_ = re.match(xpr.comment_cmd, content)
+                if match_ is None:
+                    raise CommandError(content)
+                command, arg = match_.groups()
                 args = arg.split()
                 commands.add(command)
                 new_text, cfg = execute(command=command, args=args, text=text, position=position)
