@@ -37,7 +37,7 @@ def get_parsers():
     parser_main.add_argument("-e", "--escape", action="store", dest="escape_characters", metavar="ESCAPE_CHARACTERS")
     parser_main.add_argument("-B", "--break-ligatures", action="store", nargs='*', metavar="BREAK_HYPHEN_LIGATURES")
     parser_main.add_argument("-L", "--latex-symb", action="store", choices=_ON_OFF, metavar="LATEX_SYMB")
-    parser_main.add_argument("-v", "--verbose", action="store_true")
+    parser_main.add_argument("-v", "--verbose", action="count", default=0)
     parser_main.add_argument("--use-emph",
                             action="store",
                             nargs='*',
