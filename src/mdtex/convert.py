@@ -2,7 +2,9 @@
 
 import re
 from functools import partial
+from uuid import uuid4
 from warnings import warn
+from typing import Sequence
 
 from mdtex import _expressions as xpr
 from ._exceptions import CommandError
@@ -159,8 +161,29 @@ class MarkdownParser:
         shielded_positions.extend(
             cls._get_shielded_positions_href(text, mask_href_name=mask_href_name)
         )
-        return sorted(shielded_positions, key=lambda tup: tup[0])
+        return _filter_and_validate_positions(shielded_positions)
     
+    @classmethod
+    def _shield(cls, text):
+        positions = cls._get_shielded_positions(text)
+        masked_text = ""
+        placeholders = {}
+        end_p = 0
+        for start, end in positions:
+            placeholder = f"<{uuid4()}>"
+            shielded_text = text[start:end]
+            placeholders[placeholder] = shielded_text
+            masked_text += text[end_p:start] + placeholder
+            end_p = end
+        masked_text += text[end_p:]
+        return masked_text, placeholders
+    
+    @classmethod
+    def _unshield(cls, text, placeholders):
+        for placeholder, shielded_text in placeholders.items():
+            text = re.sub(_regex_escape(placeholder), shielded_text, text)
+        return text
+
     @staticmethod
     def href(text):
         return re.sub(xpr.href, r"\\href{\2}{\1}", text)
@@ -201,21 +224,15 @@ class MarkdownParser:
 
     def escape(self, text):
         """Escape characters"""
-
         # Positions in text to be escaped
         escape_positions = set()
         escape_characters = self.escape_characters
-        
         # Populate escape_positins (for all escape characteres)
+        text, key = self._shield(text)
         for ch in escape_characters:
             # List of spans of verbatims and comments in text
-            mask_href_name = (ch == "\\")
-            shield = self._get_shielded_positions(text=text, mask_href_name=mask_href_name)
             for match_ in re.finditer(_regex_escape(ch), text):
                 pos = match_.start()
-                if any(start <= pos < end for start, end in shield):
-                    # In shielded position, do not escape
-                    continue
                 escape_positions.add(pos)
         # Add escape characters where necessary
         # sorted and reversed so that already added escape characters don't mess
@@ -223,7 +240,8 @@ class MarkdownParser:
         text = list(text)
         for pos in sorted(escape_positions, reverse=True):
             text.insert(pos, "\\")
-        return "".join(text)
+        text = "".join(text)
+        return self._unshield(text, key)
     
     def break_ligatures(self, text):
         def _break(l, t):
@@ -254,21 +272,20 @@ class MarkdownParser:
                 try:
                     new_text, cfg = execute(command=command, args=args, text=text, position=position)
                 except NotImplementedError:
-                    warn(f"Not implemented: '{command}'")
+                    warn(f"Not implemented: '{command}'.")
                 text = re.sub(comment.re, new_text, text)
                 self.cfg.update(cfg)
             else:
-                text = re.sub(comment.re, MarkdownParser._to_comment(content), text)
+                text = re.sub(comment.re, self._to_comment(content), text)
         return text
     
     def quotation_marks(self, text):
-
         # pylint: disable=W0101
         quotations_patterns = [
             (("``", "''"), xpr.double_quotations),
             (("`", "'"), xpr.single_quotations),
         ]
-        shield = self._get_shielded_positions(text)
+        text, key = self._shield(text)
         for quotations, pattern in quotations_patterns:
             while True:
                 match_ = re.search(pattern, text)
@@ -276,12 +293,9 @@ class MarkdownParser:
                     break
                 start, end = match_.span()
                 content = match_.groups()[0]
-                if any(s <= start < e for s, e in shield):
-                    # In shielded position, do not replace
-                    continue
                 quotation_text = quotations[0] + content + quotations[1]
                 text = text[:start] + quotation_text + text[end:]
-        return text
+        return self._unshield(text, key)
             
 
     def preamble(self, text):
@@ -313,3 +327,16 @@ def _regex_escape(s):
     if s in _REGEX_ESCAPE_CHARACTERS:
         return "\\" + s
     return s
+
+def _filter_and_validate_positions(positions: Sequence[tuple[int, int]]):
+    filtered_positions = []
+    for start1, end1 in sorted(positions):
+        if any(start2 <= start1 <= end1 <= end2 for (start2, end2) in filtered_positions):
+            continue
+        if any(start2 <= start1 <= end2 <= end1 for (start2, end2) in filtered_positions):
+            raise ValueError(
+                "One position range partially contains another: "
+                "(start1 < start2 < end1 < end2)"
+            )
+        filtered_positions.append((start1, end1))
+    return filtered_positions
