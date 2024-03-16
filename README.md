@@ -32,10 +32,11 @@ The following options can be passed:
 
   - `--help` (or `-h`)
   - `--output [OUTPUT]` (or `-o`)
-  - `--title TITLE [TITLE]` (or `-T`)
+  - `--title [TITLE]` (or `-T`)
   - `--author [AUTHOR]` (or `-A`)
   - `--date [DATE]` (or `-D`)
   - `--documentclass {book,report,article}` (or `-d`)
+  - `--font [FONT]` (or `-f`)
   - `--header-one-is-title {ON,OFF}` (or `-1`)
   - `--header{one,two,three,four,five,six} [HEADER]`
   - `--escape [ESCAPE_CHARACTERS]` (or `-e`)
@@ -64,6 +65,10 @@ Roughly,
 - With `article`, the LaTeX header order reads `section`, `subsection`, `subsubsection`, `paragraph`, `subparagraph`, ...
 
 This behavior can be altered with the options `--header-one-is-title` and `--header{one,two,three,four,five,six}` (see below).
+
+#### `font`
+
+The [LaTeX font](https://tug.org/FontCatalogue/) to use.
 
 #### `title`, `author`, `date`
 
