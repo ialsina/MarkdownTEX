@@ -1,35 +1,31 @@
 from re import finditer, sub
 from typing import Optional
-from textwrap import indent as indent_, dedent
+from textwrap import indent as indent_
+from .app import App
 
 class LatexDocument:
-    def __init__(self, document, cfg):
+    def __init__(self, document, cfg: App):
         self.document = document
         self.cfg = cfg
     
-    def __getattr__(self, __value):
-        cfg = self.cfg
-        if hasattr(cfg, __value):
-            return getattr(cfg, __value)
-        return super().__getattr__(__value)
-    
     def __str__(self):
         preamble = ""
-        preamble += f"\\documentclass{{{self.documentclass}}}\n"
+        preamble += f"\\documentclass{{{self.cfg.documentclass}}}\n"
         preamble += "\\usepackage[utf8]{inputenc}\n"
         preamble += "\\usepackage[T1]{fontenc}\n"
         preamble += "\\usepackage[a4paper]{geometry}\n"
         preamble += "\\usepackage{enumitem}\n"
-        for pkg in self.packages:
+        for pkg in self.cfg.packages:
             preamble += f"\\usepackage{{{pkg}}}\n"
-        preamble += f"\\title{{{self.title}}}\n"
-        preamble += f"\\author{{{self.author}}}\n"
-        preamble += f"\\date{{{self.date}}}\n\n"
+        preamble += f"\\title{{{self.cfg.title}}}\n"
+        preamble += f"\\author{{{self.cfg.author}}}\n"
+        preamble += f"\\date{{{self.cfg.date}}}\n\n"
 
         document = f"{preamble}\n\\begin{{document}}\n\n" +\
                    f"\\maketitle\n{self.document}\n\n\\end{{document}}"
 
         return document
+
 
 class LatexEnvironment:
     def __init__(self,
@@ -86,5 +82,3 @@ class LatexEnvironment:
             self.add_argument(match_.groups()[0].split())
         content = sub(pattern_texenvarg, "", content)
         self.content = content.strip()
-
-
