@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 
 import re
 from textwrap import dedent
@@ -10,10 +11,18 @@ def time(*args, **kwargs):
     return "", {}, None
 
 def texenv(text, position, args):
-    raise RuntimeError
+    raise NotImplementedError(f"""
+> TEXENVARG
+    position={position},
+    args={args}
+""")
 
 def texenvarg(text, position, args):
-    raise RuntimeError
+    raise NotImplementedError(f"""
+> TEXENVARG
+    position={position},
+    args={args}
+""")
 
 def textag(text, position, args):
     raise NotImplementedError(

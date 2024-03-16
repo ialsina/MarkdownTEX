@@ -2,7 +2,7 @@
 
 import re
 from functools import partial
-
+from warnings import warn
 
 from mdtex import _expressions as xpr
 from ._exceptions import CommandError
@@ -249,7 +249,10 @@ class MarkdownParser:
                 command, arg = match_.groups()
                 args = arg.split()
                 commands.add(command)
-                new_text, cfg = execute(command=command, args=args, text=text, position=position)
+                try:
+                    new_text, cfg = execute(command=command, args=args, text=text, position=position)
+                except NotImplementedError:
+                    warn(f"Not implemented: '{command}'")
                 text = re.sub(comment.re, new_text, text)
                 self.cfg.update(cfg)
             else:
