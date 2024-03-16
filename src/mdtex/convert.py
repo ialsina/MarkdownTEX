@@ -124,26 +124,28 @@ class MarkdownParser:
             text = text[:start] + str(texenv) + text[end:]
         return text
 
-    def _get_shielded_positions_href(self, text, character=None):
+    @classmethod
+    def _get_shielded_positions_href(cls, text, mask_href_name=False):
         shielded_positions = []
         for match_ in re.finditer(xpr.href, text):
-            span = match_.span()
+            start, _ = match_.span()
             group = match_.group()
             span_text = (
-                span[0] + group.index("[") + 1,
-                span[1] + group.index("]")
+                start + group.index("[") + 1,
+                start + group.index("]")
             )
             span_link = (
-                span[0] + group.index("(") + 1,
-                span[1] + group.index(")")
+                start + group.index("(") + 1,
+                start + group.index(")")
             )
             # backslash must be escaped also from link
-            if character == "\\":
+            if mask_href_name:
                 shielded_positions.append(span_link)
             shielded_positions.append(span_text)
         return shielded_positions
 
-    def _get_shielded_positions(self, text, character=None):
+    @classmethod
+    def _get_shielded_positions(cls, text, mask_href_name=None):
         shielded_positions = []
         shield_patterns = (
             xpr.comment,
@@ -155,7 +157,7 @@ class MarkdownParser:
                 shielded_positions.append(match_.span())
         # Extend with positions coming from hrefs
         shielded_positions.extend(
-            self._get_shielded_positions_href(text, character=character)
+            cls._get_shielded_positions_href(text, mask_href_name=mask_href_name)
         )
         return sorted(shielded_positions, key=lambda tup: tup[0])
     
@@ -207,14 +209,14 @@ class MarkdownParser:
         # Populate escape_positins (for all escape characteres)
         for ch in escape_characters:
             # List of spans of verbatims and comments in text
-            shield = self._get_shielded_positions(text, ch)
+            mask_href_name = (ch == "\\")
+            shield = self._get_shielded_positions(text=text, mask_href_name=mask_href_name)
             for match_ in re.finditer(_regex_escape(ch), text):
                 pos = match_.start()
                 if any(start <= pos < end for start, end in shield):
                     # In shielded position, do not escape
                     continue
                 escape_positions.add(pos)
-
         # Add escape characters where necessary
         # sorted and reversed so that already added escape characters don't mess
         # with the numbering of the rest
