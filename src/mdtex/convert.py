@@ -4,7 +4,7 @@ import re
 from functools import partial
 from uuid import uuid4
 from warnings import warn
-from typing import Sequence
+from typing import Sequence, Mapping, Any
 
 from mdtex import _expressions as xpr
 from ._exceptions import CommandError
@@ -222,13 +222,10 @@ class MarkdownParser:
         text = re.sub(xpr.emph_1usc, rf"\\{cmd_single}{{\1}}", text)
         return text
 
-    def escape(self, text):
-        """Escape characters"""
-        # Positions in text to be escaped
+    @staticmethod
+    def _escape(text: str, escape_characters: Sequence[str]):
         escape_positions = set()
-        escape_characters = self.escape_characters
         # Populate escape_positins (for all escape characteres)
-        text, key = self._shield(text)
         for ch in escape_characters:
             # List of spans of verbatims and comments in text
             for match_ in re.finditer(_regex_escape(ch), text):
@@ -240,8 +237,36 @@ class MarkdownParser:
         text = list(text)
         for pos in sorted(escape_positions, reverse=True):
             text.insert(pos, "\\")
-        text = "".join(text)
-        return self._unshield(text, key)
+        return "".join(text)
+
+    @classmethod
+    def _escape_placeholders(cls, placeholders: Mapping[Any, str], escape_characters: Sequence[str]):
+        for placeholder, value in placeholders.items():
+            # Escape characters in titles
+            match_ = re.match(xpr.headerany, value)
+            if match_ is not None:
+                title = match_.groups()[0]
+                title_e = cls._escape(title, escape_characters=escape_characters)
+                placeholders[placeholder] = re.sub(title, title_e, value)
+                continue
+            # Escape characters in hrefs
+            match_ = re.match(xpr.href, value)
+            if match_ is not None:
+                name, a = match_.groups()
+                name_e = cls._escape(name, escape_characters=escape_characters)
+                a_e = cls._escape(a, escape_characters=set(escape_characters).intersection(["\\"]))
+                placeholders[placeholder] = re.sub(name, name_e, re.sub(a, a_e, value))
+                continue
+        return placeholders
+    
+    def escape(self, text):
+        """Escape characters"""
+        # Positions in text to be escaped
+        escape_characters = self.escape_characters
+        text, placeholders = MarkdownParser._shield(text)
+        text = self._escape(text, escape_characters=escape_characters)
+        placeholders = self._escape_placeholders(placeholders, escape_characters=escape_characters)
+        return self._unshield(text, placeholders)
     
     def break_ligatures(self, text):
         def _break(l, t):
