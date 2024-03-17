@@ -2,6 +2,7 @@ from re import finditer, sub
 from typing import Optional
 from textwrap import indent as indent_
 from .app import App
+from .fonts import get_font_usage
 
 class LatexDocument:
     def __init__(self, document, cfg: App):
@@ -12,12 +13,11 @@ class LatexDocument:
         preamble = ""
         preamble += f"\\documentclass{{{self.cfg.documentclass}}}\n"
         preamble += "\\usepackage[utf8]{inputenc}\n"
-        preamble += "\\usepackage[T1]{fontenc}\n"
         preamble += "\\usepackage[a4paper]{geometry}\n"
         preamble += "\\usepackage{enumitem}\n"
-        preamble += f"\\usepackage{{{self.cfg.font}}}\n"
         for pkg in self.cfg.packages:
             preamble += f"\\usepackage{{{pkg}}}\n"
+        preamble += get_font_usage(self.cfg.font)
         preamble += f"\\title{{{self.cfg.title}}}\n"
         preamble += f"\\author{{{self.cfg.author}}}\n"
         preamble += f"\\date{{{self.cfg.date}}}\n\n"

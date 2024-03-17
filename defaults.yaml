@@ -6,7 +6,7 @@ escape_characters: "_%&#$\\"
 latex_symb: True
 use_emph: []
 break_ligatures: ["hyphen"]
-font: "lmodern"
+font: "Computer Modern"
 
 # Packages
 pkg_hyperref: True

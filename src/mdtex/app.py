@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Sequence, Mapping, Any
 
 from mdtex.config import config, defaults, packages, PATH_IO
+from mdtex.fonts import is_font
 
 _ON_OFF = ["ON", "OFF"]
 _NUMBERS = ("zero", "one", "two", "three", "four", "five", "six")
@@ -103,7 +104,6 @@ class App:
         }
         package_args, used_packages = self._parse_package_args(unknown_args)
         self.packages = used_packages
-        # TODO Confuses, e.g. --headerthree with "input"...
         self.pkg = {}
         self.cmd = {}
         self.env = {}
@@ -119,6 +119,10 @@ class App:
         if not namespace.input.lower().endswith(".md"):
             raise ValueError(
                 f'Input file "{namespace.input}" must end in ".md"'
+            )
+        if not is_font(namespace.font):
+            raise ValueError(
+                f'Font "{namespace.font}" is not a valid font.'
             )
         namespace = self._transform_namespace(namespace)
         namespace.input = self._normalize_input_path(namespace.input)
