@@ -122,7 +122,8 @@ class App:
             )
         if not is_font(namespace.font):
             raise ValueError(
-                f'Font "{namespace.font}" is not a valid font.'
+                f'Font "{namespace.font}" is not a valid font.\n'
+                "To see a list of valid fonts, run `md2tex-fonts`."
             )
         namespace = self._transform_namespace(namespace)
         namespace.input = self._normalize_input_path(namespace.input)
