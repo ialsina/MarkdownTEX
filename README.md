@@ -68,7 +68,15 @@ This behavior can be altered with the options `--header-one-is-title` and `--hea
 
 #### `font`
 
-The [LaTeX font](https://tug.org/FontCatalogue/) to use.
+The LaTeX font to use. Can be passed
+- as listed in [The LaTeX Font Catalogue](https://tug.org/FontCatalogue/), e.g. `--font 'TeX Gyre Pagella'` (or `--font tex-gyre-pagella`)
+- as the corresponding package name, where applicable, e.g. `--font tgpagella`
+
+To see a list of the available font names, run
+
+```md2tex-fonts```
+
+in the terminal.
 
 #### `title`, `author`, `date`
 
