@@ -2,6 +2,7 @@
 
 documentclass: article
 header_one_is_title: True
+table_of_contents: True
 escape_characters: "_%&#$\\"
 latex_symb: True
 use_emph: []

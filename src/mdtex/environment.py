@@ -8,8 +8,10 @@ class LatexDocument:
     def __init__(self, document, cfg: App):
         self.document = document
         self.cfg = cfg
+        self.preamble = self._build_preamble()
+        self.latex = self._build_latex()
 
-    def __str__(self):
+    def _build_preamble(self):
         preamble = ""
         if self.cfg.size:
             preamble += f"\\documentclass[{self.cfg.size}pt]{{{self.cfg.documentclass}}}\n"
@@ -24,11 +26,21 @@ class LatexDocument:
         preamble += f"\\title{{{self.cfg.title}}}\n"
         preamble += f"\\author{{{self.cfg.author}}}\n"
         preamble += f"\\date{{{self.cfg.date}}}\n\n"
+        return preamble
 
-        document = f"{preamble}\n\\begin{{document}}\n\n" +\
-                   f"\\maketitle\n{self.document}\n\n\\end{{document}}"
-
+    def _build_latex(self):
+        document = ""
+        document += self.preamble
+        document += "\n\\begin{document}\n\n"
+        document += "\\maketitle\n\n"
+        if self.cfg.table_of_contents:
+            document += "\\tableofcontents\n\n"
+        document += self.document
+        document += "\n\n\\end{document}\n"
         return document
+
+    def __str__(self):
+        return self.latex
 
 
 class LatexEnvironment:

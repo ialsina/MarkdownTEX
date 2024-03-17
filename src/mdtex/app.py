@@ -43,6 +43,7 @@ def get_parsers():
     parser_main.add_argument("-T", "--title", action="store", default="", metavar="TITLE")
     parser_main.add_argument("-A", "--author", action="store", default="", metavar="AUTHOR")
     parser_main.add_argument("-D", "--date", action="store", default="", metavar="DATE")
+    parser_main.add_argument("-C", "--table-of-contents", action="store", choices=_ON_OFF, metavar="TABLE_OF_CONTENTS")
     parser_main.add_argument("-1", "--header-one-is-title", action="store", choices=_ON_OFF, metavar="HEADER_ONE_IS_TITLE")
     parser_main.add_argument("-e", "--escape", action="store", dest="escape_characters", metavar="ESCAPE_CHARACTERS")
     parser_main.add_argument("-B", "--break-ligatures", action="store", nargs='*', metavar="LIGATURES")
