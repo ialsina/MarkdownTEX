@@ -32,12 +32,13 @@ The following options can be passed:
 
   - `--help` (or `-h`)
   - `--output [OUTPUT]` (or `-o`)
-  - `--title [TITLE]` (or `-T`)
-  - `--author [AUTHOR]` (or `-A`)
-  - `--date [DATE]` (or `-D`)
   - `--documentclass {book,report,article}` (or `-d`)
   - `--font [FONT]` (or `-f`)
   - `--size [SIZE]` (or `-s`)
+  - `--title [TITLE]` (or `-T`)
+  - `--author [AUTHOR]` (or `-A`)
+  - `--date [DATE]` (or `-D`)
+  - `--table-of-contents {ON,OFF}` (or `-C`)
   - `--header-one-is-title {ON,OFF}` (or `-1`)
   - `--header{one,two,three,four,five,six} [HEADER]`
   - `--escape [ESCAPE_CHARACTERS]` (or `-e`)
@@ -88,6 +89,10 @@ LaTeX document size (in *pt*). Note the document classes `book`, `report` and `a
 #### `title`, `author`, `date`
 
 The LaTeX tags for title, author and date can be passed via command line by means of these options.
+
+#### `table-of-contents`
+
+Pass `--table-of-contents ON` to include a table of contents in the LaTeX document. Pass `--table-of-contents OFF` so the document doesn't include one.
 
 #### `header-one-is-title`
 
