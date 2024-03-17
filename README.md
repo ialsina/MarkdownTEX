@@ -37,6 +37,7 @@ The following options can be passed:
   - `--date [DATE]` (or `-D`)
   - `--documentclass {book,report,article}` (or `-d`)
   - `--font [FONT]` (or `-f`)
+  - `--size [SIZE]` (or `-s`)
   - `--header-one-is-title {ON,OFF}` (or `-1`)
   - `--header{one,two,three,four,five,six} [HEADER]`
   - `--escape [ESCAPE_CHARACTERS]` (or `-e`)
@@ -66,6 +67,8 @@ Roughly,
 
 This behavior can be altered with the options `--header-one-is-title` and `--header{one,two,three,four,five,six}` (see below).
 
+In addition, the classes `extbook`, `extreport` and `extarticle` are supported, with identical features but supporting a wider range of sizes (see below).
+
 #### `font`
 
 The LaTeX font to use. Can be passed
@@ -77,6 +80,10 @@ To see a list of the available font names, run
 ```md2tex-fonts```
 
 in the terminal.
+
+#### `size`
+
+LaTeX document size (in *pt*). Note the document classes `book`, `report` and `article` only support values of `10`, `11` and `12`. In contrast, the classes `extbook`, `extreport` and `extarticle` support `8`, `9`, `10`, `11`, `12`, `14`, `17` and `20`.
 
 #### `title`, `author`, `date`
 
