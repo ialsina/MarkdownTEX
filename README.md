@@ -42,7 +42,7 @@ The following options can be passed:
   - `--escape [ESCAPE_CHARACTERS]` (or `-e`)
   - `--latex-symb {ON,OFF}` (or `-L`)
   - `--use-emph [{single,double}]`
-  - `--break-ligatures {ON,OFF}` (or `-H`)
+  - `--break-ligatures [LIGATURES]` (or `-B`)
   - `--pkg-<PACKAGE> {ON,OFF}`
   - `--pkg-<FUNCTIONALITY> [PACKAGE]`
   - `--pkg-<PACKAGE>-args [PACKAGE_ARGS]`
