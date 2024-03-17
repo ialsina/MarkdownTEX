@@ -15,7 +15,9 @@ PATH_ROOT = PATH_SRC.parent
 PATH_CONFIG = PATH_ROOT / "config.yaml"
 PATH_DEFAULTS = PATH_ROOT / "defaults.yaml"
 PATH_PACKAGE_CHOICES = PATH_ROOT / "packages.yaml"
-
+PATH_DATA = PATH_ROOT / "data"
+PATH_FONTS = PATH_DATA / "fonts.txt"
+PATH_FONT_USAGE = PATH_DATA / "font_usages.json"
 
 @dataclass
 class Config:
