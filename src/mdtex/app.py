@@ -7,7 +7,15 @@ from mdtex.fonts import is_font
 
 _ON_OFF = ["ON", "OFF"]
 _NUMBERS = ("zero", "one", "two", "three", "four", "five", "six")
-_DOCUMENT_CLASSES = ("book", "report", "article")
+_DOCUMENT_CLASSES = ("book", "report", "article", "extbook", "extreport", "extarticle")
+_SUPPORTED_SIZES = {
+    "book": (10, 11, 12),
+    "report": (10, 11, 12),
+    "article": (10, 11, 12),
+    "extbook": (8, 9, 10, 11, 12, 14, 17, 20),
+    "extreport": (8, 9, 10, 11, 12, 14, 17, 20),
+    "extarticle": (8, 9, 10, 11, 12, 14, 17, 20),
+}
 _LIGATURE_KEYS = {"hyphen": "--"}
 _DEFAULT_HEADERS = (
     "part",
@@ -20,7 +28,6 @@ _DEFAULT_HEADERS = (
     "subparagraph",
 )
 
-
 def get_parsers():
     # pylint: disable=W0621
 
@@ -31,7 +38,8 @@ def get_parsers():
     parser_main.add_argument("input", action="store", metavar="INPUT")
     parser_main.add_argument("-o", "--output", action="store", default=None, metavar="OUTPUT")
     parser_main.add_argument("-d", "--documentclass", action="store", choices=_DOCUMENT_CLASSES, metavar="DOCUMENTCLASS")
-    parser_main.add_argument("-f", "--font", action="store", metavar="FONT")
+    parser_main.add_argument("-f", "--font", action="store", metavar="FONT", type=str)
+    parser_main.add_argument("-s", "--size", action="store", metavar="SIZE", type=int, default=None)
     parser_main.add_argument("-T", "--title", action="store", default="", metavar="TITLE")
     parser_main.add_argument("-A", "--author", action="store", default="", metavar="AUTHOR")
     parser_main.add_argument("-D", "--date", action="store", default="", metavar="DATE")
@@ -78,6 +86,7 @@ class App:
     title: str
     date: str
     font: str
+    size: int
     header_one_is_title: bool
     escape: Sequence[str]
     break_hyphen_ligatures: bool
@@ -125,6 +134,14 @@ class App:
                 f'Font "{namespace.font}" is not a valid font.\n'
                 "To see a list of valid fonts, run `md2tex-fonts`."
             )
+        if (
+            namespace.size is not None
+            and namespace.size not in _SUPPORTED_SIZES[namespace.documentclass]
+        ):
+            raise ValueError(
+                f'The supported sizes for the documentclass "{namespace.documentclass}" '
+                f'are: {", ".join([str(s) for s in _SUPPORTED_SIZES[namespace.documentclass]])}.'
+            )
         namespace = self._transform_namespace(namespace)
         namespace.input = self._normalize_input_path(namespace.input)
         namespace.output = self._normalize_output_path(namespace.output, namespace.input)
@@ -139,11 +156,11 @@ class App:
         document_class = self.documentclass
         if header_one_is_title:
             offset -= 1
-        if document_class == "book":
+        if document_class in ("book", "extbook"):
             offset += -1
-        elif document_class == "report":
+        elif document_class in ("report", "extreport"):
             offset += 0
-        elif document_class == "article":
+        elif document_class in ("article", "extarticle"):
             offset += 1
         else:
             raise ValueError(

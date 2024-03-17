@@ -11,7 +11,10 @@ class LatexDocument:
 
     def __str__(self):
         preamble = ""
-        preamble += f"\\documentclass{{{self.cfg.documentclass}}}\n"
+        if self.cfg.size:
+            preamble += f"\\documentclass[{self.cfg.size}pt]{{{self.cfg.documentclass}}}\n"
+        else:
+            preamble += f"\\documentclass{{{self.cfg.documentclass}}}\n"
         preamble += "\\usepackage[utf8]{inputenc}\n"
         preamble += "\\usepackage[a4paper]{geometry}\n"
         preamble += "\\usepackage{enumitem}\n"
