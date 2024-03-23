@@ -22,7 +22,8 @@ class LatexDocument:
         preamble += "\\usepackage{enumitem}\n"
         for pkg in self.cfg.packages:
             preamble += f"\\usepackage{{{pkg}}}\n"
-        preamble += get_font_usage(self.cfg.font)
+        if self.cfg.font:
+            preamble += get_font_usage(self.cfg.font)
         preamble += f"\\title{{{self.cfg.title}}}\n"
         preamble += f"\\author{{{self.cfg.author}}}\n"
         preamble += f"\\date{{{self.cfg.date}}}\n\n"

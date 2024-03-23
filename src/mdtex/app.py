@@ -130,11 +130,12 @@ class App:
             raise ValueError(
                 f'Input file "{namespace.input}" must end in ".md"'
             )
-        if not is_font(namespace.font):
-            raise ValueError(
-                f'Font "{namespace.font}" is not a valid font.\n'
-                "To see a list of valid fonts, run `md2tex-fonts`."
-            )
+        if namespace.font:
+            if not is_font(namespace.font):
+                raise ValueError(
+                    f'Font "{namespace.font}" is not a valid font.\n'
+                    "To see a list of valid fonts, run `md2tex-fonts`."
+                )
         if (
             namespace.size is not None
             and namespace.size not in _SUPPORTED_SIZES[namespace.documentclass]

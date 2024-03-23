@@ -1,8 +1,12 @@
 import json
 import re
+from functools import partial
 from collections import defaultdict
+from collections.abc import Sequence, Mapping
+from typing import Callable
 
 from mdtex.config import PATH_FONTS, PATH_FONT_USAGE
+from mdtex._exceptions import NoFontFilesError
 
 __all__ = [
     "supported_fonts",
@@ -10,25 +14,51 @@ __all__ = [
     "get_font_usage",
 ]
 
-def _normalize(s: str):
-    if isinstance(s, list):
-        return [_normalize(element) for element in s]
-    if isinstance(s, dict):
-        return {_normalize(k): v for k, v in s.items()}
-    return s.lower().replace(" ", "_").replace("-", "_")
+class LazyFactory:
+    def __init__(self, get_data: Callable):
+        self._get_items = get_data
+        self._data = None
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = self._get_items()
+        return self._data
+    def __getitem__(self, i):
+        return self.data[i]
+    def __iter__(self):
+        return iter(self.data)
+    def __len__(self):
+        return len(self.data)
 
-try:
-    with open(PATH_FONTS, "r", encoding="utf-8") as f:
-        supported_fonts = f.read().splitlines()
-        _fonts = _normalize(supported_fonts)
-    with open(PATH_FONT_USAGE, "r", encoding="utf-8") as f:
-        _font_usage = json.loads(f.read())
-        _font_usage = _normalize(_font_usage)
-except FileNotFoundError as exc:
-    raise FileNotFoundError(
-        f"Files {PATH_FONTS} and {PATH_FONT_USAGE} must exist to use latex fonts."
-    ) from exc
+class LazyList(LazyFactory, Sequence): ... # pylint: disable=C0115,C0321
+class LazyDict(LazyFactory, Mapping): ... # pylint: disable=C0115,C0321
 
+
+def _normalize(obj: str | Sequence | Mapping):
+    if isinstance(obj, str):
+        return obj.lower().replace(" ", "_").replace("-", "_")
+    if isinstance(obj, Sequence):
+        return [_normalize(element) for element in obj]
+    if isinstance(obj, Mapping):
+        return {_normalize(k): v for k, v in obj.items()}
+    raise TypeError(
+        f"Unknown type: {type(obj)}"
+    )
+
+def _read_lines(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read().splitlines()
+    except FileNotFoundError as exc:
+        raise NoFontFilesError() from exc
+  
+def _read_json_normalize(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return _normalize(json.loads(f.read()))
+    except FileNotFoundError as exc:
+        raise NoFontFilesError() from exc
+   
 def _get_font_packages():
     pattern = re.compile(r"^\\usepackage(?:\[.*\])?\{(.+)\}", re.MULTILINE)
     font_package_lists = defaultdict(list)
@@ -53,7 +83,10 @@ def _get_font_packages():
                 package_font[_normalize(pkg)] = font
     return package_font
 
-_font_packages = _get_font_packages()
+supported_fonts = LazyList(partial(_read_lines, PATH_FONTS))
+_fonts = LazyList(partial(_normalize, supported_fonts))
+_font_usage = LazyDict(partial(_read_json_normalize, PATH_FONT_USAGE))
+_font_packages = LazyDict(_get_font_packages)
 
 def is_font(s: str):
     """Return True if it the passed value is a supported font,
