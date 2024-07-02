@@ -4,9 +4,11 @@ from typing import Sequence, Mapping, Any
 
 from mdtex.config import config, defaults, packages, PATH_IO
 from mdtex.fonts import is_font
+from mdtex._exceptions import ValidationError
 
 _ON_OFF = ["ON", "OFF"]
 _NUMBERS = ("zero", "one", "two", "three", "four", "five", "six")
+_TYPES = ("pdf", "tex", "odt", "doc", "docx")
 _DOCUMENT_CLASSES = ("book", "report", "article", "extbook", "extreport", "extarticle")
 _SUPPORTED_SIZES = {
     "book": (10, 11, 12),
@@ -37,6 +39,7 @@ def get_parsers():
     parser_main = subparsers.add_parser("main")
     parser_main.add_argument("input", action="store", metavar="INPUT")
     parser_main.add_argument("-o", "--output", action="store", default=None, metavar="OUTPUT")
+    parser_main.add_argument("-t", "--type", action="store", default="tex", metavar="TYPE")
     parser_main.add_argument("-d", "--documentclass", action="store", choices=_DOCUMENT_CLASSES, metavar="DOCUMENTCLASS")
     parser_main.add_argument("-f", "--font", action="store", metavar="FONT", type=str)
     parser_main.add_argument("-s", "--size", action="store", metavar="SIZE", type=int, default=None)
@@ -83,6 +86,7 @@ class App:
 
     input: Path
     output: Path
+    type: str
     documentclass: str
     title: str
     date: str
@@ -146,7 +150,11 @@ class App:
             )
         namespace = self._transform_namespace(namespace)
         namespace.input = self._normalize_input_path(namespace.input)
-        namespace.output = self._normalize_output_path(namespace.output, namespace.input)
+        namespace.output, namespace.type = self._normalize_output_path_and_type(
+            namespace.output,
+            namespace.input,
+            namespace.type
+        )
         namespace.break_ligatures = [
             _LIGATURE_KEYS.get(lig, lig) for lig in namespace.break_ligatures
         ]
@@ -230,21 +238,25 @@ class App:
         )
 
     @staticmethod
-    def _normalize_output_path(output: str | None, path_in: Path):
-        default_name = path_in.name.rstrip(path_in.suffix) + ".tex"
+    def _normalize_output_path_and_type(output: str | None, path_in: Path, type_: str):
+        default_name = path_in.name.rstrip(path_in.suffix) + f".{type_}"
         default_dir = (
             path_in.parent
             if config.default_output_dir_as_input_dir
             else Path(".").absolute()
         )
         if output is None:
-            return default_dir / default_name
+            if type_ is None:
+                raise ValidationError("Both output and type were None.")
+            return default_dir / default_name, type_
+        if "." in str(output):
+            type_ = str(output).rsplit(".", 1)[1]
         path_out = Path(output)
         if not path_out.is_absolute():
-            path_out = default_dir / path_out
+            path_out = default_dir / path_out, type_
         if path_out.is_dir():
-            return path_out / default_name
-        return path_out
+            return path_out / default_name, type_
+        return path_out, type_
 
     @staticmethod
     def _transform_namespace(namespace, from_=None, into=None):
