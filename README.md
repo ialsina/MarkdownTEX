@@ -1,6 +1,6 @@
 # MarkdownTEX
 
-MarkdownTEX is a Python package intended to convert a Markdown document into a LaTeX document.
+MarkdownTEX is a Python package intended to parse Markdown documents for conversion into other formats.
 
 ## Installation
 
@@ -18,10 +18,10 @@ Note that you will need a version of Python 3.10 or superior.
 
 ## Usage
 
-Once the package is installed mdtex, the command
+Once the package is installed, the command
 
 ```
-md2tex input_file.md
+mdtk input_file.md
 ```
 
 will translate `input_file.md` into LaTeX.
@@ -32,6 +32,7 @@ The following options can be passed:
 
   - `--help` (or `-h`)
   - `--output [OUTPUT]` (or `-o`)
+  - `--type [TYPE]` (or `-t`)
   - `--documentclass {book,report,article}` (or `-d`)
   - `--font [FONT]` (or `-f`)
   - `--size [SIZE]` (or `-s`)
@@ -55,6 +56,10 @@ The following options can be passed:
 If a file name is passed, that will be the output file name. By default, the input file name (with the `.tex` extension) is used.
 If a directory is passed, that will be the output file directory. By default the current working directory is used.
 If a full path (absolute or relative to the current working directory) is passed, that will be the output directory and file name.
+
+#### `type`
+
+The output type of the parsed Markdown document. Currently, the recognized values for this are `--type tex` and `type pdf`.
 
 #### `documentclass`
 

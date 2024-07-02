@@ -11,10 +11,9 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "md2tex=mdtex.tools.convert:md2tex",
-            "md2pdf=mdtex.tools.convert:md2pdf",
-            "md2tex-packages=mdtex.tools.package_help:md2tex_package_help",
-            "md2tex-fonts=mdtex.tools.fonts:md2tex_supported_fonts",
+            "mdtk=mdtex.tools.convert:mdtk",
+            "mdtk-packages=mdtex.tools.package_help:md2tex_package_help",
+            "mdtk-fonts=mdtex.tools.fonts:md2tex_supported_fonts",
         ]
     }
 )

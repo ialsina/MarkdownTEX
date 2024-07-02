@@ -12,3 +12,6 @@ class NoFontFilesError(FileNotFoundError):
     def __init__(self):
         message = f"Files {PATH_FONTS} and {PATH_FONT_USAGE} must exist to use latex fonts."
         super().__init__(message)
+
+class ValidationError(RuntimeError):
+    pass
