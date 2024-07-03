@@ -6,7 +6,7 @@ from uuid import uuid4
 from warnings import warn
 from typing import Sequence, Mapping, Any
 
-from mdtex import _expressions as xpr
+from mdtk import _expressions as xpr
 from ._exceptions import CommandError
 from .app import App
 from .commands import execute

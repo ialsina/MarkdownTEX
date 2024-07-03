@@ -1,4 +1,4 @@
-from mdtex.config import packages
+from mdtk.config import packages
 
 def md2tex_package_help():
     onoff_str = "\n" + "\n".join([f"- {el}" for el in packages.on_off]) + "\n"

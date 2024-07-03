@@ -2,9 +2,9 @@ import argparse
 from pathlib import Path
 from typing import Sequence, Mapping, Any
 
-from mdtex.config import config, defaults, packages, PATH_IO
-from mdtex.fonts import is_font
-from mdtex._exceptions import ValidationError
+from mdtk.config import config, defaults, packages, PATH_IO
+from mdtk.fonts import is_font
+from mdtk._exceptions import ValidationError
 
 _ON_OFF = ["ON", "OFF"]
 _NUMBERS = ("zero", "one", "two", "three", "four", "five", "six")

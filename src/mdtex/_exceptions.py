@@ -1,4 +1,4 @@
-from mdtex.config import PATH_FONTS, PATH_FONT_USAGE
+from mdtk.config import PATH_FONTS, PATH_FONT_USAGE
 
 class CommandError(Exception):
     def __init__(self, command, line=None):

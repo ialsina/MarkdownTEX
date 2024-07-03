@@ -10,7 +10,7 @@ from requests import Session
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from mdtex.config import PATH_FONTS, PATH_FONT_USAGE
+from mdtk.config import PATH_FONTS, PATH_FONT_USAGE
 
 URL = "https://tug.org/FontCatalogue/"
 

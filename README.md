@@ -1,13 +1,13 @@
-# MarkdownTEX
+# MarkDown ToolKit `mdtk`
 
-MarkdownTEX is a Python package intended to parse Markdown documents for conversion into other formats.
+The Markdown Toolkit (`mdtk`) is a Python package intended to parse Markdown documents for conversion into other formats.
 
 ## Installation
 
 To install it, clone it from Github or your own fork, create a dedicated virtual environment and install it from source.
 
 ```
-git clone git@github.com:ialsina/MarkdownTEX.git
+git clone git@github.com:ialsina/mdtk.git
 cd MarkdownTEX
 python -m venv .venv
 source .venv/bin/activate

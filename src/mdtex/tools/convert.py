@@ -3,7 +3,7 @@
 import sys
 import subprocess
 
-from mdtex import App, MarkdownParser
+from mdtk import App, MarkdownParser
 
 def md2tex(app: App):
     with open(app.input, "r", encoding="utf-8") as f:

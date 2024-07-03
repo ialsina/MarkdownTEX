@@ -5,8 +5,8 @@ from collections import defaultdict
 from collections.abc import Sequence, Mapping
 from typing import Callable
 
-from mdtex.config import PATH_FONTS, PATH_FONT_USAGE
-from mdtex._exceptions import NoFontFilesError
+from mdtk.config import PATH_FONTS, PATH_FONT_USAGE
+from mdtk._exceptions import NoFontFilesError
 
 __all__ = [
     "supported_fonts",
