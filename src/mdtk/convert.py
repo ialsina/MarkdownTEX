@@ -262,8 +262,12 @@ class MarkdownParser:
         text, placeholders = MarkdownParser._shield(text)
         text = self._escape(text, escape_characters=escape_characters)
         placeholders = self._escape_placeholders(placeholders, escape_characters=escape_characters)
-        return self._unshield(text, placeholders)
-    
+        text = self._unshield(text, placeholders)
+
+        # FIX: ensure proper spacing after \LaTeX
+        text = re.sub(r"\\LaTeX(?!\{)", r"\\LaTeX{}", text) 
+        return text
+
     def break_ligatures(self, text):
         def _break(l, t):
             while l in t:
