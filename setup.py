@@ -4,10 +4,11 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
     requirements = f.read().splitlines()
 
 setup(
-    name='Markdown Toolkit',
+    name='Markdown-Toolkit',
     version='1.0.0',
-    packages=find_packages(),
+    packages=find_packages("src"), # find_packages should search inside src
     package_dir={"": "src",},
+    package_data={"mdtk": ["data/*.yaml", "data/*.txt", "data/*.json"]},
     install_requires=requirements,
     entry_points={
         "console_scripts": [

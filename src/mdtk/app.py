@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from typing import Sequence, Mapping, Any
 
-from mdtk.config import config, defaults, packages, PATH_IO
+from mdtk.config import config, defaults, packages
 from mdtk.fonts import is_font
 from mdtk._exceptions import ValidationError
 
@@ -225,14 +225,17 @@ class App:
     @staticmethod
     def _normalize_input_path(input_: str):
         path_in = Path(input_)
-        if path_in.is_absolute():
-            if path_in.exists():
-                return path_in
-        else:
-            if path_in.absolute().exists():
-                return path_in.absolute()
-            if (PATH_IO / path_in).exists():
-                return PATH_IO / path_in
+
+        # if absolute path is passed and exists return resolved path
+        if path_in.is_absolute() and path_in.exists():
+            return path_in.resolve()
+
+        # if relative path is passed append the cwd and return resolved path
+        candidate = path_in.resolve()
+        if candidate.exists():
+            return candidate
+
+        # else raise an error
         raise FileNotFoundError(
             f"File {input_} not found."
         )

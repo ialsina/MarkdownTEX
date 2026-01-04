@@ -2,27 +2,26 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence, Mapping
 from yaml import safe_load
+from importlib.resources import files # add files from data dir
 
 __all__ = [
     "config",
     "defaults",
-    "PATH_IO",
 ]
 
+# search for files in data dir in mdtk package dir once the package is installed
+DATA_DIR = files("mdtk") / "data" 
 
-PATH_SRC = Path(__file__).absolute().parent.parent
-PATH_ROOT = PATH_SRC.parent
-PATH_CONFIG = PATH_ROOT / "config.yaml"
-PATH_DEFAULTS = PATH_ROOT / "defaults.yaml"
-PATH_PACKAGE_CHOICES = PATH_ROOT / "packages.yaml"
-PATH_DATA = PATH_ROOT / "data"
-PATH_FONTS = PATH_DATA / "fonts.txt"
-PATH_FONT_USAGE = PATH_DATA / "font_usages.json"
+PATH_CONFIG = DATA_DIR / "config.yaml"
+PATH_DEFAULTS = DATA_DIR / "defaults.yaml"
+PATH_PACKAGE_CHOICES = DATA_DIR / "packages.yaml"
+PATH_DATA = DATA_DIR / "data"
+PATH_FONTS = DATA_DIR / "fonts.txt"
+PATH_FONT_USAGE = DATA_DIR / "font_usages.json"
 
 @dataclass
 class Config:
     default_output_dir_as_input_dir: bool
-    fallback_input_dir: str
 
 @dataclass
 class Packages:
@@ -52,4 +51,3 @@ with open(PATH_DEFAULTS, "r", encoding="utf-8") as f:
 with open(PATH_PACKAGE_CHOICES, "r", encoding="utf-8") as f:
     packages = Packages.from_dict(safe_load(f))
 
-PATH_IO = PATH_ROOT / config.fallback_input_dir

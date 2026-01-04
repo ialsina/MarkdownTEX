@@ -1,0 +1,472 @@
+A Picture Alphabet
+Abbie QT
+Accanthis
+Alegreya
+Alegreya Sans
+Alfa Slab One
+Algol Revived
+Almendra
+Anonymous Pro
+Antiqua
+Antykwa PÃ³Åtawskiego
+Antykwa PÃ³Åtawskiego Light
+Antykwa ToruÅska
+Antykwa ToruÅska Condensed
+Antykwa ToruÅska Light
+Antykwa ToruÅska Light Condensed
+Archivo
+Arev
+Arimo
+Artificial Uncial
+Arvo
+Asana Math
+Ascii
+Atkinson Hyperlegible
+Augie
+Auriocus Kalligraphicus
+Baskervald ADF
+Baskervald X
+BaskervilleF
+Bbold
+Bera Mono
+Bera Sans
+Bera Serif
+Berenis ADF
+Biolinum
+Bitter
+Boisik
+Bookman
+BrushScriptX-Italic
+CM Pica
+Cabin
+Cabin Condensed
+Caladea
+Calligra
+Cantarell
+Carlito
+Carolingan Miniscules
+Cascadia Code
+Charis SIL
+Charter BT
+Chivo Light
+Chivo Regular
+Clara
+Clear Sans
+Cochineal
+Coelacanth Extra Light
+Coelacanth Light
+Coelacanth Regular
+Comfortaa
+Comic Neue
+Comic Neue Angular
+Computer Concrete with Concrete Math
+Computer Concrete with Euler Math
+Computer Modern
+Computer Modern Bright
+Computer Modern Dunhill Roman
+Computer Modern Funny Roman
+Computer Modern Gray
+Computer Modern Outline
+Computer Modern Roman Fibonacci
+Computer Modern Sans Serif
+Computer Modern Sans Serif Outline
+Computer Modern Sans Serif Quotation
+Computer Modern Sans Serif with Sansmathfonts
+Computer Modern Teletype
+Computer Modern Teletype Quotation
+Computer Modern Typewriter Proportional
+Cormorant Garamond
+Cormorant Garamond Light
+Courier
+Courier 10 Pitch BT
+Covington
+Crimson Pro Extra Light
+Crimson Pro Light
+Crimson Pro Medium
+Crimson Pro Regular
+Crimson Text
+Cuprum
+Cyklop
+DRM (Don's Revised Modern)
+Day Roman
+Day Roman S
+Decadence
+DejaVu Sans
+DejaVu Sans Condensed
+DejaVu Sans Mono
+DejaVu Serif
+DejaVu Serif Condensed
+Deutsche Normalschrift
+Domitian
+Droid Sans
+Droid Sans Mono
+Droid Serif
+EB Garamond
+ETbb
+Early Gothic
+Eczar Medium
+Eczar Regular
+Eiad Concrete – Concrete Irish
+Eiad Sans Serif – Sans Serif Irish
+Eiad Typewriter – Irish Typewriter Text
+Eiad – Computer Modern Irish
+Electrum ADF
+Epigrafica
+Erewhon
+Erewhon-Math
+European Computer Concrete with Concrete Math
+European Computer Concrete with Euler Math
+European Computer Modern Bright
+European Computer Modern Dunhill Roman
+European Computer Modern Funny Roman
+European Computer Modern Sans Serif
+European Computer Modern Sans Serif Quotation
+European Computer Modern Teletype
+European Computer Modern Teletype Quotation
+European Computer Modern Typewriter Proportional
+Eurpopean Computer Modern
+Fetamont
+Fira Mono
+Fira Sans Book
+Fira Sans Extra Light
+Fira Sans Light
+Fira Sans Math
+Fira Sans Regular
+Fira Sans Thin
+Fira Sans Ultra Light
+Fira Sans with newtxsf math
+Flyspec
+Forum
+Fraktur
+French Cursive
+GFS Artemisia
+GFS Artemisia with Euler math
+GFS Bodoni
+GFS Didot
+GFS Neohellenic
+GFS Neohellenic Math
+GNU Freefont Sans
+GNU Freefont Serif
+Gandhi Sans
+Gandhi Serif
+Garamond
+Garamond Expert with Math Design
+Garamond Expert with NewTX Math
+Garamond Libre
+Gentium
+Gillius
+GoMono
+GoSans
+Gothic Textura Prescius
+Gothic Textura Quadrata
+Gotik
+Gudea
+Half Uncial
+Hershey Old English Font
+Heuristica
+Hind Madurai Medium
+Hind Madurai Regular
+Humanist
+IBM Plex Mono Extra Light
+IBM Plex Mono Light
+IBM Plex Mono Medium
+IBM Plex Mono Regular
+IBM Plex Mono Text
+IBM Plex Mono Thin
+IBM Plex Sans Extra Light
+IBM Plex Sans Light
+IBM Plex Sans Medium
+IBM Plex Sans Regular
+IBM Plex Sans Text
+IBM Plex Sans Thin
+IBM Plex Serif Extra Light
+IBM Plex Serif Light
+IBM Plex Serif Medium
+IBM Plex Serif Regular
+IBM Plex Serif Text
+IBM Plex Serif Thin
+IM Fell English
+Ibarra Real Nova
+Inconsolata
+Inria Sans Light
+Inria Sans Regular
+Inria Serif Light
+Inria Serif Regular
+Insular Majuscule
+Insular Minuscule
+Inter Extra Light
+Inter Light
+Inter Medium
+Inter Regular
+Inter Thin
+Intimacy
+Iwona
+Iwona Condensed
+Iwona Light
+Iwona Light Condensed
+JD
+Jana Skrivana
+Josefin Sans
+Josefin Sans Extra Light
+Josefin Sans Light
+Josefin Sans Thin
+Junicode
+KP Monospaced
+KP Sans-Serif
+KP Serif
+Kerkis
+Kung Fu QT
+Kurier
+Kurier Condensed
+Kurier Light
+Kurier Light Condensed
+LX Fonts
+Lateinische Ausgangsschrift
+Latin Modern Mono
+Latin Modern Mono Light
+Latin Modern Mono Light Condensed
+Latin Modern Mono Proportional
+Latin Modern Mono Z
+Latin Modern Roman
+Latin Modern Sans
+Latin Modern Sans Extended
+Lato
+Letter Gothic
+Lexend
+Libertinus Mono
+Libertinus Sans
+Libertinus Serif
+Libre Baskerville
+Libre Bodoni
+Libre Caslon
+Libre Franklin
+Libris ADF
+Linux Libertine
+Literaturnaya
+Lobster Two
+Lukas Svatba
+LuxiMono
+MLModern
+Magra
+Malvern
+Marcellus
+Merriweather
+Merriweather Light
+Merriweather Sans
+Merriweather Sans Light
+Miama Nueva
+Mintspirit
+Missaali
+Montserrat Alternates Extra Light
+Montserrat Alternates Light
+Montserrat Alternates Regular
+Montserrat Alternates Thin
+Montserrat Extra Light
+Montserrat Light
+Montserrat Regular
+Montserrat Thin
+Movieola
+Necker
+New Computer Modern Roman
+New Computer Modern Sans Serif
+New Computer Modern Typewriter
+New PX
+New PX with Euler math
+New TX
+New TXTT
+Nimbus 15 Mono
+Nimbus 15 Mono Narrow
+Nimbus 15 Sans
+Nimbus 15 Serif
+Noto Mono
+Noto Sans
+Noto Sans Mono
+Noto Serif
+Nunito
+OCR-A Optical Character Recognition Font A
+OCR-B Optical Character Recognition Font B
+Obyknovennaya Novaya
+Old Latin
+Old Standard
+Open Sans
+Oswald
+Overlock
+PX Fonts
+Pandora
+Pandora Sans Serif
+Pandora Single Pitch
+Paratype Sans
+Paratype Sans Caption
+Paratype Sans Narrow
+Paratype Serif
+Paratype Serif Caption
+Peter Vanroose Script
+Piltdown QT
+Play
+Playfair Display
+Poiret One
+Pookie
+Punk
+Punk Nova
+QT AgateType
+QT Ancient Olive
+QT Antique Post
+QT Arabian
+QT Arnie B
+QT Artiston
+QT Atchen
+QT Avanti
+QT Basker
+QT Beckman
+QT Bengal
+QT Black Forest
+QT Blimpo
+QT Bodini
+QT Bodini Poster
+QT Bookmann
+QT Boulevard
+QT Brush Stroke
+QT Caligulatype
+QT Canaithtype
+QT Cascadetype
+QT Caslan
+QT Caslan Open
+QT Casual
+QT Chancery Type
+QT Chicagoland
+QT Claytablet
+QT Cloistered Monk
+QT Coronation
+QT Doghaus
+QT Dublin Irish
+QT Era Type
+QT Eurotype
+QT Floraline
+QT Florencia
+QT Fraktur
+QT Frank
+QT Friz Quad
+QT Future
+QT Future Poster
+QT Garomand
+QT Ghoul Face
+QT Graph Lite
+QT Greece
+QT Handwriting
+QT Heidelberg Type
+QT Helvet Black
+QT Helvet Bold Outline
+QT Helvet Condensed
+QT Hoboken
+QT Howard Type
+QT Impromptu
+QT Kooper
+QT Korrin
+QT Lautrec Type
+QT Letter Goth
+QT Linoscroll
+QT Linostroke
+QT London Scroll
+QT Magic Marker
+QT Merry Script
+QT Optimum
+QT Palatine
+QT Pandora
+QT Paris France
+QT Peignoir
+QT Peignoir Lite
+QT Pristine
+QT Robotic 2000
+QT San Diego
+QT School Century
+QT Slogantype
+QT Techtone
+QT Theatre
+QT Time Outline
+QT Tumbleweed
+QT USA Uncial
+QT Vaga Round
+QT West End
+Quattrocento
+Quattrocento Sans
+Raleway
+Roboto
+Roboto Condensed
+Roboto Light
+Roboto Light Condensed
+Roboto Slab
+Roboto Slab Light
+Roboto Slab Thin
+Roboto Thin
+Roman Rustic
+Romande ADF
+Rosario
+Rotunda
+STEP
+ScholaX
+Schulausgangsschrift
+Schwabacher
+Schwell
+Segment Font
+Shobhika
+Simfon
+Skeetch
+Slabikar
+Source Code Pro
+Source Sans Pro
+Source Serif Pro Extra Light
+Source Serif Pro Light
+Source Serif Pro Regular
+Spankys Bungalow
+Spectral
+Spectral Light
+Square Capitals
+Sticks Too
+Stix
+Stix 2
+SÃ¼tterlin
+TW Cal 14
+TX Fonts
+TXTT
+Tall Paul
+Tapir
+TeX Gyre Adventor
+TeX Gyre Bonum
+TeX Gyre Chorus
+TeX Gyre Cursor
+TeX Gyre Heros
+TeX Gyre Pagella
+TeX Gyre Schola
+TeX Gyre Termes
+Teen Spirit
+Theano Didot
+Theano Modern
+Theano OldStyle
+Tinos
+URW A030
+URW Chancery
+URW Classico
+URW Gothic
+URW Grotesk
+URW Nimbus Roman
+URW Nimbus Sans
+URW Palladio
+URW Schoolbook L
+Uncial
+Universal
+Universalis ADF Condensed
+Universalis ADF Standard
+Utopia Regular with Fourier
+Utopia Regular with Math Design
+Venturis ADF
+Venturis ADF No2
+Venturis ADF Old
+Venturis ADF Sans
+Vereinfachte Ausgangsschrift
+Vicentino
+Webster
+Weise QT
+XCharter
+XITS
+fbb â A free Bembo-like font
+Ãsterreichische Schulschrift
