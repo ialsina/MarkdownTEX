@@ -127,27 +127,23 @@ class MarkdownParser:
         return text
 
     @classmethod
-    def _get_shielded_positions_href(cls, text, mask_href_name=False):
+    def _get_shielded_positions_href(cls, text):
         shielded_positions = []
         for match_ in re.finditer(xpr.href, text):
             start, _ = match_.span()
             group = match_.group()
-            span_text = (
-                start + group.index("[") + 1,
-                start + group.index("]")
-            )
+
             span_link = (
                 start + group.index("(") + 1,
                 start + group.index(")")
             )
-            # backslash must be escaped also from link
-            if mask_href_name:
-                shielded_positions.append(span_link)
-            shielded_positions.append(span_text)
+
+            shielded_positions.append(span_link)
+
         return shielded_positions
 
     @classmethod
-    def _get_shielded_positions(cls, text, mask_href_name=None):
+    def _get_shielded_positions(cls, text):
         shielded_positions = []
         shield_patterns = (
             xpr.comment,
@@ -159,7 +155,7 @@ class MarkdownParser:
                 shielded_positions.append(match_.span())
         # Extend with positions coming from hrefs
         shielded_positions.extend(
-            cls._get_shielded_positions_href(text, mask_href_name=mask_href_name)
+            cls._get_shielded_positions_href(text)
         )
         return _filter_and_validate_positions(shielded_positions)
     
@@ -266,8 +262,12 @@ class MarkdownParser:
         text, placeholders = MarkdownParser._shield(text)
         text = self._escape(text, escape_characters=escape_characters)
         placeholders = self._escape_placeholders(placeholders, escape_characters=escape_characters)
-        return self._unshield(text, placeholders)
-    
+        text = self._unshield(text, placeholders)
+
+        # FIX: ensure proper spacing after \LaTeX
+        text = re.sub(r"\\LaTeX(?!\{)", r"\\LaTeX{}", text) 
+        return text
+
     def break_ligatures(self, text):
         def _break(l, t):
             while l in t:
